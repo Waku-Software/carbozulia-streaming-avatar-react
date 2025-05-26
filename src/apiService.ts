@@ -25,7 +25,7 @@ export type Voice = {
   preview: string;
   voice_id: string;
   name: string;
-}
+};
 
 export type Language = {
   lang_code: string;
@@ -58,7 +58,7 @@ export class ApiService {
       method,
       headers: {
         Authorization: `Bearer ${this.openapiToken}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -70,30 +70,27 @@ export class ApiService {
     return responseBody.data;
   }
 
-  public async createSession(data: {
-    avatar_id: string;
-    duration: number;
-  }): Promise<Session> {
-    return this.fetchApi("/api/open/v4/liveAvatar/session/create", "POST", data);
+  public async createSession(data: { avatar_id: string; duration: number }): Promise<Session> {
+    return this.fetchApi('/api/open/v4/liveAvatar/session/create', 'POST', data);
   }
 
   public async closeSession(id: string) {
-    return this.fetchApi("/api/open/v4/liveAvatar/session/close", "POST", {
+    return this.fetchApi('/api/open/v4/liveAvatar/session/close', 'POST', {
       id,
     });
   }
 
   public async getLangList(): Promise<Language[]> {
-    const data = await this.fetchApi("/api/open/v3/language/list", "GET");
+    const data = await this.fetchApi('/api/open/v3/language/list', 'GET');
     return data?.lang_list;
   }
 
   public async getVoiceList(): Promise<Voice[]> {
-    return this.fetchApi("/api/open/v3/voice/list", "GET");
+    return this.fetchApi('/api/open/v3/voice/list', 'GET');
   }
 
-  public async getAvatarList(): Promise<Avatar[]> {
-    const data = await this.fetchApi("/api/open/v4/liveAvatar/avatar/list?page=1&size=100", "GET");
+  public async getAvatarList(type: string = 'open'): Promise<Avatar[]> {
+    const data = await this.fetchApi(`/api/open/v4/liveAvatar/avatar/list?page=1&size=100&type=${type}`, 'GET');
     return data?.result;
   }
 }
