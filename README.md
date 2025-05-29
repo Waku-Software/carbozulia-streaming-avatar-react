@@ -18,7 +18,6 @@ A React-based demo application for integrating with Akool's Streaming Avatar ser
 
 - Node.js v22.11.0 or higher
 - A valid Akool API token
-- Agora.io credentials
 
 ## Setup
 
