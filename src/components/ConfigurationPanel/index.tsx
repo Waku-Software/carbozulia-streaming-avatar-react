@@ -24,6 +24,8 @@ interface ConfigurationPanelProps {
   setVoiceUrl: (url: string) => void;
   backgroundUrl: string;
   setBackgroundUrl: (url: string) => void;
+  knowledgeId: string;
+  setKnowledgeId: (id: string) => void;
   isJoined: boolean;
   startStreaming: () => Promise<void>;
   closeStreaming: () => Promise<void>;
@@ -50,6 +52,8 @@ export default function ConfigurationPanel({
   setVoiceUrl,
   backgroundUrl,
   setBackgroundUrl,
+  knowledgeId,
+  setKnowledgeId,
   isJoined,
   startStreaming,
   closeStreaming,
@@ -124,6 +128,18 @@ export default function ConfigurationPanel({
             max="60"
             value={sessionDuration}
             onChange={(e) => setSessionDuration(Math.max(1, parseInt(e.target.value) || 1))}
+            disabled={isJoined}
+          />
+        </label>
+      </div>
+      <div>
+        <label>
+          Knowledge ID:
+          <input
+            type="text"
+            value={knowledgeId}
+            onChange={(e) => setKnowledgeId(e.target.value)}
+            placeholder="Enter knowledge ID"
             disabled={isJoined}
           />
         </label>

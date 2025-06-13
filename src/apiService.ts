@@ -44,6 +44,17 @@ export type Avatar = {
   available: boolean;
 };
 
+export type Knowledge = {
+  _id: string;
+  name: string;
+};
+
+export type SessionOptions = {
+  avatar_id: string;
+  duration: number;
+  knowledge_id?: string;
+};
+
 export class ApiService {
   private openapiHost: string;
   private openapiToken: string;
@@ -70,7 +81,7 @@ export class ApiService {
     return responseBody.data;
   }
 
-  public async createSession(data: { avatar_id: string; duration: number }): Promise<Session> {
+  public async createSession(data: SessionOptions): Promise<Session> {
     return this.fetchApi('/api/open/v4/liveAvatar/session/create', 'POST', data);
   }
 
@@ -83,6 +94,11 @@ export class ApiService {
   public async getLangList(): Promise<Language[]> {
     const data = await this.fetchApi('/api/open/v3/language/list', 'GET');
     return data?.lang_list;
+  }
+
+  public async getKnowledgeList(): Promise<Knowledge[]> {
+    const data = await this.fetchApi('/api/open/v4/knowledge/list', 'GET');
+    return data?.knowledge_list;
   }
 
   public async getVoiceList(): Promise<Voice[]> {

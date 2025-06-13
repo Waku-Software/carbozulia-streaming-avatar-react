@@ -22,6 +22,7 @@ function App() {
 
   const [openapiHost, setOpenapiHost] = useState(import.meta.env.VITE_OPENAPI_HOST || '');
   const [avatarId, setAvatarId] = useState(import.meta.env.VITE_AVATAR_ID || '');
+  const [knowledgeId, setKnowledgeId] = useState('');
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(import.meta.env.VITE_AVATAR_VIDEO_URL || '');
 
   const [openapiToken, setOpenapiToken] = useState(import.meta.env.VITE_OPENAPI_TOKEN || '');
@@ -36,6 +37,7 @@ function App() {
 
   const { isJoined, connected, remoteStats, startStreaming, closeStreaming } = useStreaming(
     avatarId,
+    knowledgeId,
     sessionDuration,
     voiceId,
     language,
@@ -64,6 +66,8 @@ function App() {
         setBackgroundUrl={setBackgroundUrl}
         voiceUrl={voiceUrl}
         setVoiceUrl={setVoiceUrl}
+        knowledgeId={knowledgeId}
+        setKnowledgeId={setKnowledgeId}
         isJoined={isJoined}
         startStreaming={startStreaming}
         closeStreaming={closeStreaming}

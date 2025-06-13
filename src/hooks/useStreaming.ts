@@ -15,6 +15,7 @@ interface StreamingState {
 
 export const useStreaming = (
   avatarId: string,
+  knowledgeId: string,
   sessionDuration: number,
   voiceId: string,
   language: string,
@@ -184,6 +185,7 @@ export const useStreaming = (
     const data = await api.createSession({
       avatar_id: avatarId,
       duration: sessionDuration * 60,
+      ...(knowledgeId ? { knowledge_id: knowledgeId } : {}),
     });
     log(data);
     updateState({ session: data });
@@ -192,7 +194,7 @@ export const useStreaming = (
 
     await joinChannel(credentials || stream_urls);
     await joinChat();
-  }, [api, avatarId, sessionDuration, joinChannel, joinChat]);
+  }, [api, avatarId, knowledgeId, sessionDuration, joinChannel, joinChat]);
 
   const closeStreaming = useCallback(async () => {
     await leaveChat();
