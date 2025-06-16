@@ -102,7 +102,7 @@ export class ApiService {
   }
 
   public async getVoiceList(): Promise<Voice[]> {
-    return this.fetchApi('/api/open/v3/voice/list', 'GET');
+    return this.fetchApi('/api/open/v3/voice/list?from=3', 'GET');
   }
 
   public async getAvatarList(type: string = 'open'): Promise<Avatar[]> {
