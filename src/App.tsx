@@ -40,6 +40,8 @@ function App() {
     knowledgeId,
     sessionDuration,
     voiceId,
+    voiceUrl,
+    backgroundUrl,
     language,
     modeType,
     api,

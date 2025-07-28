@@ -18,6 +18,8 @@ export const useStreaming = (
   knowledgeId: string,
   sessionDuration: number,
   voiceId: string,
+  voiceUrl: string,
+  backgroundUrl: string,
   language: string,
   modeType: number,
   api: ApiService | null,
@@ -152,10 +154,12 @@ export const useStreaming = (
 
     await setAvatarParams(client, {
       vid: voiceId,
+      vurl: voiceUrl,
       lang: language,
       mode: modeType,
+      bgurl: backgroundUrl,
     });
-  }, [client, onStreamMessage, voiceId, language, modeType]);
+  }, [client, onStreamMessage, voiceId, voiceUrl, language, modeType, backgroundUrl]);
 
   const leaveChat = useCallback(async () => {
     client.removeAllListeners('stream-message');
@@ -170,11 +174,13 @@ export const useStreaming = (
     if (state.connected && client) {
       setAvatarParams(client, {
         vid: voiceId,
+        vurl: voiceUrl,
         lang: language,
         mode: modeType,
+        bgurl: backgroundUrl,
       });
     }
-  }, [client, state.connected, voiceId, language, modeType]);
+  }, [client, state.connected, voiceId, voiceUrl, language, modeType, backgroundUrl]);
 
   const startStreaming = useCallback(async () => {
     if (!api) {
