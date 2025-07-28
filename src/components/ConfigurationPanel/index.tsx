@@ -63,6 +63,7 @@ export default function ConfigurationPanel({
   const [voices, setVoices] = useState<Voice[]>([]);
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [isStarting, setIsStarting] = useState(false);
+  const [backgroundUrlInput, setBackgroundUrlInput] = useState(backgroundUrl);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,6 +84,11 @@ export default function ConfigurationPanel({
 
     fetchData();
   }, [api]);
+
+  // Sync local background URL input with prop
+  useEffect(() => {
+    setBackgroundUrlInput(backgroundUrl);
+  }, [backgroundUrl]);
 
   const handleStartStreaming = async () => {
     setIsStarting(true);
@@ -178,8 +184,9 @@ export default function ConfigurationPanel({
           Background URL:
           <input
             type="text"
-            value={backgroundUrl}
-            onChange={(e) => setBackgroundUrl(e.target.value)}
+            value={backgroundUrlInput}
+            onChange={(e) => setBackgroundUrlInput(e.target.value)}
+            onBlur={(e) => setBackgroundUrl(e.target.value)}
             placeholder="Enter background image/video URL"
           />
         </label>

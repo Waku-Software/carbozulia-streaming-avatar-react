@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Voice } from '../../apiService';
 import './styles.css';
 
@@ -12,6 +12,18 @@ interface VoiceSelectorProps {
 
 export default function VoiceSelector({ voiceId, setVoiceId, voices, voiceUrl, setVoiceUrl }: VoiceSelectorProps) {
   const [useManualVoiceId, setUseManualVoiceId] = useState(false);
+  const [voiceUrlInput, setVoiceUrlInput] = useState(voiceUrl);
+  const [voiceIdInput, setVoiceIdInput] = useState(voiceId);
+
+  // Sync local voice URL input with prop
+  useEffect(() => {
+    setVoiceUrlInput(voiceUrl);
+  }, [voiceUrl]);
+
+  // Sync local voice ID input with prop
+  useEffect(() => {
+    setVoiceIdInput(voiceId);
+  }, [voiceId]);
 
   return (
     <div className="voice-selector">
@@ -31,8 +43,9 @@ export default function VoiceSelector({ voiceId, setVoiceId, voices, voiceUrl, s
             ) : (
               <input
                 type="text"
-                value={voiceId}
-                onChange={(e) => setVoiceId(e.target.value)}
+                value={voiceIdInput}
+                onChange={(e) => setVoiceIdInput(e.target.value)}
+                onBlur={(e) => setVoiceId(e.target.value)}
                 placeholder="Enter voice ID"
               />
             )}
@@ -51,8 +64,9 @@ export default function VoiceSelector({ voiceId, setVoiceId, voices, voiceUrl, s
           Voice URL:
           <input
             type="text"
-            value={voiceUrl}
-            onChange={(e) => setVoiceUrl(e.target.value)}
+            value={voiceUrlInput}
+            onChange={(e) => setVoiceUrlInput(e.target.value)}
+            onBlur={(e) => setVoiceUrl(e.target.value)}
             placeholder="Enter voice URL"
           />
         </label>
