@@ -1,0 +1,241 @@
+/* Modal overlay */
+.json-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+/* Modal container */
+.json-modal-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 90vw;
+  max-width: 1000px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Modal header */
+.json-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.json-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.json-modal-close {
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.json-modal-close:hover {
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Modal content */
+.json-modal-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.json-modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.json-modal-toolbar-left {
+  display: flex;
+  gap: 8px;
+}
+
+.json-modal-toolbar-right {
+  display: flex;
+  align-items: center;
+}
+
+.json-modal-error {
+  color: #ff4d4f;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+}
+
+/* Editor container */
+.json-modal-editor {
+  flex: 1;
+  margin: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8f9fa;
+  transition: all 0.2s;
+}
+
+.json-modal-editor.has-error {
+  border-color: #ff4d4f;
+  background: #fff2f0;
+}
+
+/* Modal footer */
+.json-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #fafafa;
+}
+
+.json-modal-status {
+  display: flex;
+  align-items: center;
+}
+
+.json-modal-changes {
+  color: #fa8c16;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.json-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Buttons */
+.json-modal-button {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid;
+  min-width: 100px;
+}
+
+.json-modal-button.primary {
+  background: #4096ff;
+  color: white;
+  border-color: #4096ff;
+}
+
+.json-modal-button.primary:hover:not(:disabled) {
+  background: #1677ff;
+  border-color: #1677ff;
+}
+
+.json-modal-button.primary:disabled {
+  background: #f5f5f5;
+  color: #bfbfbf;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.json-modal-button.secondary {
+  background: white;
+  color: #666;
+  border-color: #d9d9d9;
+}
+
+.json-modal-button.secondary:hover:not(:disabled) {
+  border-color: #4096ff;
+  color: #4096ff;
+}
+
+.json-modal-button.secondary:disabled {
+  background: #f5f5f5;
+  color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .json-modal-container {
+    width: 95vw;
+    max-width: none;
+    margin: 10px;
+  }
+  
+  .json-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .json-modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .json-modal-toolbar {
+    padding: 12px 20px;
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+  
+  .json-modal-toolbar-left,
+  .json-modal-toolbar-right {
+    justify-content: center;
+  }
+  
+  .json-modal-editor {
+    margin: 16px 20px;
+  }
+  
+  .json-modal-footer {
+    padding: 16px 20px;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .json-modal-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .json-modal-button {
+    flex: 1;
+  }
+}

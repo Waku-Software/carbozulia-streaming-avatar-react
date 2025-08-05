@@ -58,7 +58,7 @@ export type SessionOptions = {
   language?: string;
   mode_type?: number;
   background_url?: string;
-  voice_params?: string;
+  voice_params?: Record<string, any>;
 };
 
 export class ApiService {

@@ -19,6 +19,7 @@ function App() {
   const [voiceId, setVoiceId] = useState(import.meta.env.VITE_VOICE_ID || '');
   const [backgroundUrl, setBackgroundUrl] = useState(import.meta.env.VITE_BACKGROUND_URL || '');
   const [voiceUrl, setVoiceUrl] = useState(import.meta.env.VITE_VOICE_URL || '');
+  const [voiceParams, setVoiceParams] = useState<Record<string, any>>({});
 
   const [openapiHost, setOpenapiHost] = useState(import.meta.env.VITE_OPENAPI_HOST || '');
   const [avatarId, setAvatarId] = useState(import.meta.env.VITE_AVATAR_ID || '');
@@ -44,6 +45,7 @@ function App() {
     backgroundUrl,
     language,
     modeType,
+    voiceParams,
     api,
   );
 
@@ -70,6 +72,8 @@ function App() {
         setVoiceUrl={setVoiceUrl}
         knowledgeId={knowledgeId}
         setKnowledgeId={setKnowledgeId}
+        voiceParams={voiceParams}
+        setVoiceParams={setVoiceParams}
         isJoined={isJoined}
         startStreaming={startStreaming}
         closeStreaming={closeStreaming}

@@ -6,6 +6,44 @@ import { setAvatarParams, log, StreamMessage, CommandResponsePayload } from '../
 import { NetworkStats } from '../components/NetworkQuality';
 import { useAgora } from '../contexts/AgoraContext';
 
+/**
+ * Avatar Configuration Types and Utilities
+ * 
+ * Handles the transformation of user configuration into Agora stream metadata
+ * with proper serialization and filtering of empty values.
+ */
+
+type AvatarConfig = {
+  voiceId: string;
+  voiceUrl: string;
+  language: string;
+  modeType: number;
+  backgroundUrl: string;
+  voiceParams: Record<string, any>;
+};
+
+/** Serialize voice parameters object to JSON string if not empty */
+const serializeVoiceParams = (params: Record<string, any>): string | undefined => {
+  return Object.keys(params).length > 0 ? JSON.stringify(params) : undefined;
+};
+
+/** Build avatar metadata object with clean, filtered values */
+const buildAvatarMetadata = (config: AvatarConfig) => {
+  const metadata = {
+    vid: config.voiceId,
+    vurl: config.voiceUrl,
+    lang: config.language,
+    mode: config.modeType,
+    bgurl: config.backgroundUrl,
+    'v-params': serializeVoiceParams(config.voiceParams),
+  };
+
+  // Filter out falsy values to avoid sending empty parameters
+  return Object.fromEntries(
+    Object.entries(metadata).filter(([_, value]) => Boolean(value))
+  );
+};
+
 interface StreamingState {
   isJoined: boolean;
   connected: boolean;
@@ -22,6 +60,7 @@ export const useStreaming = (
   backgroundUrl: string,
   language: string,
   modeType: number,
+  voiceParams: Record<string, any>,
   api: ApiService | null,
 ) => {
   const { client } = useAgora();
@@ -147,40 +186,39 @@ export const useStreaming = (
     await client.leave();
   }, [client]);
 
+  // Custom hook for avatar parameter management
+  const updateAvatarParams = useCallback(async () => {
+    if (!client) return;
+    
+    const metadata = buildAvatarMetadata({
+      voiceId,
+      voiceUrl,
+      language,
+      modeType,
+      backgroundUrl,
+      voiceParams,
+    });
+    
+    await setAvatarParams(client, metadata);
+  }, [client, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
+
   const joinChat = useCallback(async () => {
     client.on('stream-message', onStreamMessage);
-
     updateState({ connected: true });
-
-    await setAvatarParams(client, {
-      vid: voiceId,
-      vurl: voiceUrl,
-      lang: language,
-      mode: modeType,
-      bgurl: backgroundUrl,
-    });
-  }, [client, onStreamMessage, voiceId, voiceUrl, language, modeType, backgroundUrl]);
+    await updateAvatarParams();
+  }, [client, onStreamMessage, updateAvatarParams]);
 
   const leaveChat = useCallback(async () => {
     client.removeAllListeners('stream-message');
-
-    updateState({
-      connected: false,
-    });
+    updateState({ connected: false });
   }, [client]);
 
-  // Add effect to update avatar params when they change
+  // Auto-update avatar params when they change during active session
   useEffect(() => {
-    if (state.connected && client) {
-      setAvatarParams(client, {
-        vid: voiceId,
-        vurl: voiceUrl,
-        lang: language,
-        mode: modeType,
-        bgurl: backgroundUrl,
-      });
+    if (state.connected) {
+      updateAvatarParams();
     }
-  }, [client, state.connected, voiceId, voiceUrl, language, modeType, backgroundUrl]);
+  }, [state.connected, updateAvatarParams]);
 
   const startStreaming = useCallback(async () => {
     if (!api) {
@@ -197,6 +235,7 @@ export const useStreaming = (
       ...(language ? { language: language } : {}),
       ...(modeType ? { mode_type: modeType } : {}),
       ...(backgroundUrl ? { background_url: backgroundUrl } : {}),
+      ...(voiceParams && Object.keys(voiceParams).length > 0 ? { voice_params: voiceParams } : {}),
     });
     log(data);
     updateState({ session: data });
@@ -217,6 +256,7 @@ export const useStreaming = (
     language,
     modeType,
     backgroundUrl,
+    voiceParams,
   ]);
 
   const closeStreaming = useCallback(async () => {

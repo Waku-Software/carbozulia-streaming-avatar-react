@@ -114,4 +114,77 @@
 
 .avatar-select option.unavailable {
   color: red;
+}
+
+/* JSON Preview styles */
+.json-preview-container {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.json-preview-container.clickable:hover .json-preview {
+  border-color: #4096ff;
+  background: #f0f7ff;
+}
+
+.json-preview-container.clickable:hover .json-preview-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.json-preview-container.disabled {
+  cursor: not-allowed;
+}
+
+.json-preview-container.disabled .json-preview {
+  opacity: 0.6;
+}
+
+.json-preview {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #f8f9fa;
+  overflow: hidden;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.json-preview-content {
+  margin: 0;
+  padding: 12px 16px;
+  padding-bottom: 32px; /* Space for hint */
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #666;
+  background: transparent;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.json-preview-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: rgba(64, 150, 255, 0.1);
+  color: #4096ff;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  opacity: 0.7;
+  transform: translateY(2px);
+  transition: all 0.2s;
+  pointer-events: none;
+}
+
+.json-preview-hint svg {
+  flex-shrink: 0;
+  opacity: 0.8;
 } 

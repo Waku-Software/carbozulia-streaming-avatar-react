@@ -16,6 +16,7 @@ type Metadata = {
   lang?: string; // language
   mode?: number; // modeType
   bgurl?: string; // backgroundUrl
+  'v-params'?: string; // voice params
 };
 
 export type CommandPayload = {

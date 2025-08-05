@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ApiService, Language, Voice, Avatar } from '../../apiService';
 import AvatarSelector from '../AvatarSelector';
 import VoiceSelector from '../VoiceSelector';
+import JsonEditorModal from '../JsonEditorModal';
 import './styles.css';
 
 interface ConfigurationPanelProps {
@@ -26,6 +27,8 @@ interface ConfigurationPanelProps {
   setBackgroundUrl: (url: string) => void;
   knowledgeId: string;
   setKnowledgeId: (id: string) => void;
+  voiceParams: Record<string, any>;
+  setVoiceParams: (params: Record<string, any>) => void;
   isJoined: boolean;
   startStreaming: () => Promise<void>;
   closeStreaming: () => Promise<void>;
@@ -54,6 +57,8 @@ export default function ConfigurationPanel({
   setBackgroundUrl,
   knowledgeId,
   setKnowledgeId,
+  voiceParams,
+  setVoiceParams,
   isJoined,
   startStreaming,
   closeStreaming,
@@ -64,6 +69,7 @@ export default function ConfigurationPanel({
   const [avatars, setAvatars] = useState<Avatar[]>([]);
   const [isStarting, setIsStarting] = useState(false);
   const [backgroundUrlInput, setBackgroundUrlInput] = useState(backgroundUrl);
+  const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,6 +95,20 @@ export default function ConfigurationPanel({
   useEffect(() => {
     setBackgroundUrlInput(backgroundUrl);
   }, [backgroundUrl]);
+
+
+
+  const handleOpenJsonModal = () => {
+    setIsJsonModalOpen(true);
+  };
+
+  const handleCloseJsonModal = () => {
+    setIsJsonModalOpen(false);
+  };
+
+  const handleJsonModalSave = (newParams: Record<string, any>) => {
+    setVoiceParams(newParams);
+  };
 
   const handleStartStreaming = async () => {
     setIsStarting(true);
@@ -191,6 +211,36 @@ export default function ConfigurationPanel({
           />
         </label>
       </div>
+      
+      <div>
+        <label>
+          Voice Parameters (JSON):
+          <div 
+            className={`json-preview-container ${isJoined ? 'disabled' : 'clickable'}`}
+            onClick={!isJoined ? handleOpenJsonModal : undefined}
+            title={!isJoined ? "Click to edit" : "Cannot edit while streaming"}
+          >
+            <div className="json-preview">
+              <pre className="json-preview-content">
+                {Object.keys(voiceParams).length === 0 
+                  ? '{}' 
+                  : JSON.stringify(voiceParams, null, 2)
+                }
+              </pre>
+              {!isJoined && (
+                <div className="json-preview-hint">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="m18.5 2.5 a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Click to edit
+                </div>
+              )}
+            </div>
+          </div>
+        </label>
+      </div>
+      
       <div className="buttons">
         {isJoined ? (
           <button onClick={closeStreaming} className="button-off">
@@ -202,6 +252,15 @@ export default function ConfigurationPanel({
           </button>
         )}
       </div>
+
+      {/* JSON Editor Modal */}
+      <JsonEditorModal
+        isOpen={isJsonModalOpen}
+        onClose={handleCloseJsonModal}
+        value={voiceParams}
+        onChange={handleJsonModalSave}
+        title="Voice Parameters Editor"
+      />
     </div>
   );
 }
