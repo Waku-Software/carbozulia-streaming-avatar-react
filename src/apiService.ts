@@ -53,6 +53,12 @@ export type SessionOptions = {
   avatar_id: string;
   duration: number;
   knowledge_id?: string;
+  voice_id?: string;
+  voice_url?: string;
+  language?: string;
+  mode_type?: number;
+  background_url?: string;
+  voice_params?: string;
 };
 
 export class ApiService {
