@@ -9,9 +9,12 @@ interface ChatInterfaceProps {
   micEnabled: boolean;
   setMicEnabled: (enabled: boolean) => void;
   toggleMic?: () => Promise<void>;
+  cameraEnabled: boolean;
+  toggleCamera: () => Promise<void>;
+  cameraError?: string | null;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEnabled, setMicEnabled, toggleMic }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEnabled, setMicEnabled, toggleMic, cameraEnabled, toggleCamera, cameraError }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleStreamMessage = useCallback((_: number, body: Uint8Array) => {
@@ -81,6 +84,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEna
           title={micEnabled ? 'Disable microphone' : 'Enable microphone'}
         >
           <span className="material-icons">{micEnabled ? 'mic' : 'mic_off'}</span>
+        </button>
+        <button
+          onClick={toggleCamera}
+          disabled={!connected}
+          className={`icon-button ${!connected ? 'disabled' : ''} ${cameraError ? 'error' : ''}`}
+          title={cameraError || (cameraEnabled ? 'Disable camera' : 'Enable camera')}
+        >
+          <span className="material-icons">{cameraEnabled ? 'videocam' : 'videocam_off'}</span>
         </button>
         {!micEnabled && (
           <>

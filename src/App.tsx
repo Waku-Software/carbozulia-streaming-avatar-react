@@ -9,10 +9,12 @@ import ChatInterface from './components/ChatInterface';
 import { useAgora } from './contexts/AgoraContext';
 import { useAudioControls } from './hooks/useAudioControls';
 import { useStreaming } from './hooks/useStreaming';
+import { useVideoCamera } from './hooks/useVideoCamera';
 
 function App() {
   const { client } = useAgora();
   const { micEnabled, setMicEnabled, toggleMic } = useAudioControls();
+  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera } = useVideoCamera();
 
   const [modeType, setModeType] = useState(Number(import.meta.env.VITE_MODE_TYPE) || 2);
   const [language, setLanguage] = useState(import.meta.env.VITE_LANGUAGE || 'en');
@@ -47,6 +49,7 @@ function App() {
     modeType,
     voiceParams,
     api,
+    localVideoTrack,
   );
 
   return (
@@ -81,13 +84,21 @@ function App() {
         setAvatarVideoUrl={setAvatarVideoUrl}
       />
       <div className="right-side">
-        <VideoDisplay isJoined={isJoined} avatarVideoUrl={avatarVideoUrl} />
+        <VideoDisplay 
+          isJoined={isJoined} 
+          avatarVideoUrl={avatarVideoUrl}
+          localVideoTrack={localVideoTrack}
+          cameraEnabled={cameraEnabled}
+        />
         <ChatInterface
           client={client}
           connected={connected}
           micEnabled={micEnabled}
           setMicEnabled={setMicEnabled}
           toggleMic={toggleMic}
+          cameraEnabled={cameraEnabled}
+          toggleCamera={toggleCamera}
+          cameraError={cameraError}
         />
         <div>{isJoined && remoteStats && <NetworkQualityDisplay stats={remoteStats} />}</div>
       </div>

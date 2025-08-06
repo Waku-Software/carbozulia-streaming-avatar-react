@@ -15,3 +15,56 @@
   height: 100%;
   object-fit: contain;
 }
+
+/* Local video overlay styles */
+.local-video-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 160px;
+  height: 120px;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.local-video-overlay:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.local-video-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.local-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror effect for natural selfie view */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .local-video-overlay {
+    width: 120px;
+    height: 90px;
+    top: 12px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .local-video-overlay {
+    width: 100px;
+    height: 75px;
+    top: 8px;
+    right: 8px;
+  }
+}

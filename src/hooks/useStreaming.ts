@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { IAgoraRTCRemoteUser, NetworkQuality } from 'agora-rtc-sdk-ng';
+import { IAgoraRTCRemoteUser, NetworkQuality, ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 import { UID } from 'agora-rtc-sdk-ng/esm';
 import { Session, ApiService, Credentials } from '../apiService';
 import { setAvatarParams, log, StreamMessage, CommandResponsePayload } from '../agoraHelper';
@@ -62,6 +62,7 @@ export const useStreaming = (
   modeType: number,
   voiceParams: Record<string, any>,
   api: ApiService | null,
+  localVideoTrack: ILocalVideoTrack | null,
 ) => {
   const { client } = useAgora();
 
@@ -182,7 +183,13 @@ export const useStreaming = (
     client.removeAllListeners('token-privilege-will-expire');
     client.removeAllListeners('token-privilege-did-expire');
 
-    await client.unpublish();
+    try {
+      // Unpublish all local tracks including video
+      await client.unpublish();
+    } catch (error) {
+      console.error('Failed to unpublish tracks:', error);
+    }
+    
     await client.leave();
   }, [client]);
 
@@ -219,6 +226,33 @@ export const useStreaming = (
       updateAvatarParams();
     }
   }, [state.connected, updateAvatarParams]);
+
+  // Handle local video track publishing/unpublishing
+  useEffect(() => {
+    const handleVideoTrack = async () => {
+      if (!state.isJoined) return;
+
+      try {
+        if (localVideoTrack) {
+          // Publish the local video track
+          await client.publish(localVideoTrack);
+          log('Local video track published');
+        } else {
+          // Find and unpublish any existing video track
+          const publishedTracks = client.localTracks;
+          const videoTrack = publishedTracks.find(track => track.trackMediaType === 'video');
+          if (videoTrack) {
+            await client.unpublish(videoTrack);
+            log('Local video track unpublished');
+          }
+        }
+      } catch (error) {
+        console.error('Failed to handle video track:', error);
+      }
+    };
+
+    handleVideoTrack();
+  }, [client, localVideoTrack, state.isJoined]);
 
   const startStreaming = useCallback(async () => {
     if (!api) {
