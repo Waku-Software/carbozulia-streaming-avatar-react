@@ -19,22 +19,115 @@
 /* Local video overlay styles */
 .local-video-overlay {
   position: absolute;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
-  width: 160px;
-  height: 120px;
+  width: 25%;
+  height: 25%;
+  min-width: 160px;
+  min-height: 120px;
+  max-width: 50%;
+  max-height: 50%;
   background: #000;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.1);
   z-index: 10;
-  transition: all 0.3s ease;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.3s ease;
 }
 
 .local-video-overlay:hover {
-  transform: scale(1.05);
-  border-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(64, 150, 255, 0.8);
+  box-shadow: 0 4px 20px rgba(64, 150, 255, 0.3);
+}
+
+.local-video-overlay.dragging {
+  transform: scale(1.02);
+  z-index: 20;
+}
+
+.local-video-overlay.resizing {
+  z-index: 20;
+}
+
+.local-video-overlay.switching {
+  border-color: rgba(76, 175, 80, 0.8);
+  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.4);
+}
+
+/* Custom drag handle */
+.drag-handle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  background: rgba(64, 150, 255, 0.8);
+  border-radius: 12px 0 12px 0;
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 15;
+}
+
+.drag-handle:hover {
+  background: rgba(64, 150, 255, 1);
+  transform: scale(1.1);
+}
+
+.drag-handle::before {
+  content: '⋮⋮';
+  color: white;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+/* Custom resize handle */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 193, 7, 0.8);
+  border-radius: 0 0 12px 12px;
+  cursor: nw-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 15;
+}
+
+.resize-handle:hover {
+  background: rgba(255, 193, 7, 1);
+  transform: scale(1.1);
+}
+
+.resize-handle::before {
+  content: '⟋';
+  color: white;
+  font-size: 14px;
+  transform: rotate(90deg);
+}
+
+/* Show handles on hover */
+.local-video-overlay:hover .drag-handle,
+.local-video-overlay:hover .resize-handle {
+  opacity: 1;
+}
+
+/* Hide handles when dragging/resizing */
+.local-video-overlay.dragging .resize-handle,
+.local-video-overlay.resizing .drag-handle {
+  opacity: 0;
 }
 
 .local-video-container {
@@ -50,21 +143,68 @@
   transform: scaleX(-1); /* Mirror effect for natural selfie view */
 }
 
+/* Hover tooltip for switching */
+.local-video-overlay::after {
+  content: 'Click to switch views';
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 30;
+}
+
+.local-video-overlay:hover::after {
+  opacity: 1;
+}
+
+
+
+/* Main local video when views are switched */
+#main-local-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1); /* Mirror effect for natural selfie view */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .local-video-overlay {
-    width: 120px;
-    height: 90px;
-    top: 12px;
+    width: 30%;
+    height: 30%;
+    min-width: 120px;
+    min-height: 90px;
+    bottom: 12px;
     right: 12px;
+  }
+  
+  .local-video-overlay::after {
+    font-size: 11px;
+    padding: 4px 8px;
   }
 }
 
 @media (max-width: 480px) {
   .local-video-overlay {
-    width: 100px;
-    height: 75px;
-    top: 8px;
+    width: 35%;
+    height: 35%;
+    min-width: 100px;
+    min-height: 75px;
+    bottom: 8px;
     right: 8px;
+  }
+  
+  .local-video-overlay::after {
+    font-size: 10px;
+    padding: 3px 6px;
   }
 }
