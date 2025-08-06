@@ -14,7 +14,6 @@ import { useVideoCamera } from './hooks/useVideoCamera';
 function App() {
   const { client } = useAgora();
   const { micEnabled, setMicEnabled, toggleMic } = useAudioControls();
-  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera } = useVideoCamera();
 
   const [modeType, setModeType] = useState(Number(import.meta.env.VITE_MODE_TYPE) || 2);
   const [language, setLanguage] = useState(import.meta.env.VITE_LANGUAGE || 'en');
@@ -37,6 +36,8 @@ function App() {
       setApi(new ApiService(openapiHost, openapiToken));
     }
   }, [openapiHost, openapiToken]);
+
+  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera } = useVideoCamera();
 
   const { isJoined, connected, remoteStats, startStreaming, closeStreaming } = useStreaming(
     avatarId,

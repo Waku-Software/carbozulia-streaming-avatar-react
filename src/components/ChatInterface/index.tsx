@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { RTCClient, interruptResponse } from '../../agoraHelper';
+import { RTCClient, interruptResponse, sendCameraEvent } from '../../agoraHelper';
 import { useMessageState } from '../../hooks/useMessageState';
 import './styles.css';
 
@@ -66,6 +66,23 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEna
     console.log(`Microphone is now ${micEnabled ? 'enabled' : 'disabled'}`);
   };
 
+  const toggleCameraInternal = async () => {
+    if (!connected) return;
+    
+    const wasEnabled = cameraEnabled;
+    
+    try {
+      // Toggle the camera first
+      await toggleCamera();
+      
+      // Send the appropriate event based on the previous state
+      const event = wasEnabled ? 'camera_close' : 'camera_open';
+      await sendCameraEvent(client, event);
+    } catch (error) {
+      console.error('Failed to toggle camera or send event:', error);
+    }
+  };
+
   return (
     <div className="chat-window">
       <div className="chat-messages">
@@ -86,7 +103,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEna
           <span className="material-icons">{micEnabled ? 'mic' : 'mic_off'}</span>
         </button>
         <button
-          onClick={toggleCamera}
+          onClick={toggleCameraInternal}
           disabled={!connected}
           className={`icon-button ${!connected ? 'disabled' : ''} ${cameraError ? 'error' : ''}`}
           title={cameraError || (cameraEnabled ? 'Disable camera' : 'Enable camera')}

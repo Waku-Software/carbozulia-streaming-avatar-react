@@ -40,13 +40,17 @@ export type ChatResponsePayload = {
   from: 'bot' | 'user';
 };
 
+export type EventPayload = {
+  event: 'camera_open' | 'camera_close';
+};
+
 export type StreamMessage = {
   v: number;
   type: string;
   mid: string;
   idx?: number;
   fin?: boolean;
-  pld: CommandPayload | ChatPayload;
+  pld: CommandPayload | ChatPayload | EventPayload;
 };
 
 export async function setAvatarParams(client: RTCClient, meta: Metadata) {
@@ -160,5 +164,29 @@ export async function sendMessageToAvatar(client: RTCClient, messageId: string, 
         await new Promise((resolve) => setTimeout(resolve, remainingDelay));
       }
     }
+  }
+}
+
+export async function sendCameraEvent(client: RTCClient, event: 'camera_open' | 'camera_close') {
+  const messageId = `msg-${Date.now()}`;
+  
+  const message: StreamMessage = {
+    v: 2,
+    type: 'event',
+    mid: messageId,
+    pld: {
+      event,
+    },
+  };
+
+  const jsondata = new TextEncoder().encode(JSON.stringify(message));
+  
+  log(`Sending camera event: ${event}`);
+  
+  try {
+    await client.sendStreamMessage(jsondata, false);
+    log(`Camera event sent successfully: ${event}`);
+  } catch (error) {
+    console.error(`Failed to send camera event: ${event}`, error);
   }
 }
