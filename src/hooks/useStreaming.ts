@@ -35,7 +35,7 @@ const buildAvatarMetadata = (config: AvatarConfig) => {
     lang: config.language,
     mode: config.modeType,
     bgurl: config.backgroundUrl,
-    'v-params': serializeVoiceParams(config.voiceParams),
+    vparams: serializeVoiceParams(config.voiceParams),
   };
 
   // Filter out falsy values to avoid sending empty parameters
