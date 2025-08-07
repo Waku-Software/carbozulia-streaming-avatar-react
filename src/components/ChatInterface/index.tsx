@@ -14,7 +14,16 @@ interface ChatInterfaceProps {
   cameraError?: string | null;
 }
 
-const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEnabled, setMicEnabled, toggleMic, cameraEnabled, toggleCamera, cameraError }) => {
+const ChatInterface: React.FC<ChatInterfaceProps> = ({
+  client,
+  connected,
+  micEnabled,
+  setMicEnabled,
+  toggleMic,
+  cameraEnabled,
+  toggleCamera,
+  cameraError,
+}) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const handleStreamMessage = useCallback((_: number, body: Uint8Array) => {
@@ -68,13 +77,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ client, connected, micEna
 
   const toggleCameraInternal = async () => {
     if (!connected) return;
-    
+
     const wasEnabled = cameraEnabled;
-    
+
     try {
       // Toggle the camera first
       await toggleCamera();
-      
+
       // Send the appropriate event based on the previous state
       const event = wasEnabled ? 'camera_close' : 'camera_open';
       await sendCameraEvent(client, event);

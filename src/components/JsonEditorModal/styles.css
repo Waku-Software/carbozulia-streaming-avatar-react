@@ -199,42 +199,42 @@
     max-width: none;
     margin: 10px;
   }
-  
+
   .json-modal-header {
     padding: 16px 20px;
   }
-  
+
   .json-modal-header h3 {
     font-size: 18px;
   }
-  
+
   .json-modal-toolbar {
     padding: 12px 20px;
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .json-modal-toolbar-left,
   .json-modal-toolbar-right {
     justify-content: center;
   }
-  
+
   .json-modal-editor {
     margin: 16px 20px;
   }
-  
+
   .json-modal-footer {
     padding: 16px 20px;
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .json-modal-actions {
     width: 100%;
     justify-content: stretch;
   }
-  
+
   .json-modal-button {
     flex: 1;
   }

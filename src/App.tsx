@@ -92,8 +92,8 @@ function App() {
         setAvatarVideoUrl={setAvatarVideoUrl}
       />
       <div className="right-side">
-        <VideoDisplay 
-          isJoined={isJoined} 
+        <VideoDisplay
+          isJoined={isJoined}
           avatarVideoUrl={avatarVideoUrl}
           localVideoTrack={localVideoTrack}
           cameraEnabled={cameraEnabled}

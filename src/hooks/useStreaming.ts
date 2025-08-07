@@ -8,7 +8,7 @@ import { useAgora } from '../contexts/AgoraContext';
 
 /**
  * Avatar Configuration Types and Utilities
- * 
+ *
  * Handles the transformation of user configuration into Agora stream metadata
  * with proper serialization and filtering of empty values.
  */
@@ -19,11 +19,11 @@ type AvatarConfig = {
   language: string;
   modeType: number;
   backgroundUrl: string;
-  voiceParams: Record<string, any>;
+  voiceParams: Record<string, unknown>;
 };
 
 /** Serialize voice parameters object to JSON string if not empty */
-const serializeVoiceParams = (params: Record<string, any>): string | undefined => {
+const serializeVoiceParams = (params: Record<string, unknown>): string | undefined => {
   return Object.keys(params).length > 0 ? JSON.stringify(params) : undefined;
 };
 
@@ -39,9 +39,7 @@ const buildAvatarMetadata = (config: AvatarConfig) => {
   };
 
   // Filter out falsy values to avoid sending empty parameters
-  return Object.fromEntries(
-    Object.entries(metadata).filter(([_, value]) => Boolean(value))
-  );
+  return Object.fromEntries(Object.entries(metadata).filter(([_, value]) => Boolean(value)));
 };
 
 interface StreamingState {
@@ -60,7 +58,7 @@ export const useStreaming = (
   backgroundUrl: string,
   language: string,
   modeType: number,
-  voiceParams: Record<string, any>,
+  voiceParams: Record<string, unknown>,
   api: ApiService | null,
   localVideoTrack: ILocalVideoTrack | null,
 ) => {
@@ -189,14 +187,14 @@ export const useStreaming = (
     } catch (error) {
       console.error('Failed to unpublish tracks:', error);
     }
-    
+
     await client.leave();
   }, [client]);
 
   // Custom hook for avatar parameter management
   const updateAvatarParams = useCallback(async () => {
     if (!client) return;
-    
+
     const metadata = buildAvatarMetadata({
       voiceId,
       voiceUrl,
@@ -205,7 +203,7 @@ export const useStreaming = (
       backgroundUrl,
       voiceParams,
     });
-    
+
     await setAvatarParams(client, metadata);
   }, [client, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
 
@@ -240,7 +238,7 @@ export const useStreaming = (
         } else {
           // Find and unpublish any existing video track
           const publishedTracks = client.localTracks;
-          const videoTrack = publishedTracks.find(track => track.trackMediaType === 'video');
+          const videoTrack = publishedTracks.find((track) => track.trackMediaType === 'video');
           if (videoTrack) {
             await client.unpublish(videoTrack);
             log('Local video track unpublished');

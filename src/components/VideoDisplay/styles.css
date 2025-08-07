@@ -166,8 +166,6 @@
   opacity: 1;
 }
 
-
-
 /* Main local video when views are switched */
 #main-local-video video {
   width: 100%;
@@ -186,7 +184,7 @@
     bottom: 12px;
     right: 12px;
   }
-  
+
   .local-video-overlay::after {
     font-size: 11px;
     padding: 4px 8px;
@@ -202,7 +200,7 @@
     bottom: 8px;
     right: 8px;
   }
-  
+
   .local-video-overlay::after {
     font-size: 10px;
     padding: 3px 6px;

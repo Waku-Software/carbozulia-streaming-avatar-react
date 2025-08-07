@@ -20,7 +20,7 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
   const enableCamera = useCallback(async () => {
     try {
       setCameraError(null);
-      
+
       // Check if we already have a track
       if (videoTrackRef.current) {
         await videoTrackRef.current.setEnabled(true);
@@ -43,13 +43,11 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
       videoTrackRef.current = cameraTrack;
       setLocalVideoTrack(cameraTrack);
       setCameraEnabled(true);
-      
 
-      
       console.log('Camera enabled successfully');
     } catch (error) {
       console.error('Failed to enable camera:', error);
-      
+
       let errorMessage = 'Failed to access camera';
       if (error instanceof Error) {
         if (error.message.includes('Permission denied')) {
@@ -60,7 +58,7 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
           errorMessage = 'Camera is being used by another application';
         }
       }
-      
+
       setCameraError(errorMessage);
       setCameraEnabled(false);
       setLocalVideoTrack(null);
@@ -73,11 +71,11 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
         // For regular disable, just disable the track but keep it for reuse
         await videoTrackRef.current.setEnabled(false);
       }
-      
+
       setCameraEnabled(false);
       setLocalVideoTrack(null);
       setCameraError(null);
-      
+
       console.log('Camera disabled successfully');
     } catch (error) {
       console.error('Failed to disable camera:', error);

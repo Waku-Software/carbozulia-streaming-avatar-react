@@ -15,7 +15,7 @@ export default function JsonEditorModal({
   onClose,
   value,
   onChange,
-  title = 'Edit JSON'
+  title = 'Edit JSON',
 }: JsonEditorModalProps) {
   const [editorValue, setEditorValue] = useState(JSON.stringify(value, null, 2));
   const [hasChanges, setHasChanges] = useState(false);
@@ -90,23 +90,19 @@ export default function JsonEditorModal({
             ×
           </button>
         </div>
-        
+
         <div className="json-modal-content">
           <div className="json-modal-toolbar">
             <div className="json-modal-toolbar-left">
-              <button 
-                onClick={formatJson} 
+              <button
+                onClick={formatJson}
                 disabled={!!jsonError}
                 className="json-modal-button secondary"
                 title="Format JSON"
               >
                 Format
               </button>
-              <button 
-                onClick={resetToEmpty}
-                className="json-modal-button secondary"
-                title="Reset to empty object"
-              >
+              <button onClick={resetToEmpty} className="json-modal-button secondary" title="Reset to empty object">
                 Reset
               </button>
             </div>
@@ -137,7 +133,7 @@ export default function JsonEditorModal({
                 bracketPairColorization: { enabled: true },
                 suggest: {
                   showSnippets: true,
-                }
+                },
               }}
             />
           </div>
@@ -148,17 +144,10 @@ export default function JsonEditorModal({
             {hasChanges && <span className="json-modal-changes">• Unsaved changes</span>}
           </div>
           <div className="json-modal-actions">
-            <button 
-              onClick={handleCancel}
-              className="json-modal-button secondary"
-            >
+            <button onClick={handleCancel} className="json-modal-button secondary">
               Cancel
             </button>
-            <button 
-              onClick={handleSave}
-              disabled={!!jsonError}
-              className="json-modal-button primary"
-            >
+            <button onClick={handleSave} disabled={!!jsonError} className="json-modal-button primary">
               Save Changes
             </button>
           </div>

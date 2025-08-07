@@ -13,7 +13,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   const localVideoRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   // State for dragging, resizing, and view switching
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -29,16 +29,16 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   // Drag handlers
   const handleDragStart = useCallback((e: React.MouseEvent) => {
     if (!overlayRef.current || !containerRef.current) return;
-    
+
     const overlay = overlayRef.current;
     const overlayRect = overlay.getBoundingClientRect();
-    
+
     setIsDragging(true);
     setDragOffset({
       x: e.clientX - overlayRect.left,
-      y: e.clientY - overlayRect.top
+      y: e.clientY - overlayRect.top,
     });
-    
+
     e.preventDefault();
     e.stopPropagation();
   }, []);
@@ -46,61 +46,64 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   // Resize handlers
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
     if (!overlayRef.current || !containerRef.current) return;
-    
+
     const overlay = overlayRef.current;
-    
+
     setIsResizing(true);
     setResizeStart({
       x: e.clientX,
       y: e.clientY,
       width: overlay.offsetWidth,
-      height: overlay.offsetHeight
+      height: overlay.offsetHeight,
     });
-    
+
     e.preventDefault();
     e.stopPropagation();
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!overlayRef.current || !containerRef.current) return;
-    
-    const container = containerRef.current;
-    const overlay = overlayRef.current;
-    const containerRect = container.getBoundingClientRect();
-    
-    if (isDragging) {
-      const newX = e.clientX - containerRect.left - dragOffset.x;
-      const newY = e.clientY - containerRect.top - dragOffset.y;
-      
-      // Constrain within container bounds
-      const maxX = container.offsetWidth - overlay.offsetWidth;
-      const maxY = container.offsetHeight - overlay.offsetHeight;
-      
-      const constrainedX = Math.max(0, Math.min(newX, maxX));
-      const constrainedY = Math.max(0, Math.min(newY, maxY));
-      
-      overlay.style.left = `${constrainedX}px`;
-      overlay.style.top = `${constrainedY}px`;
-      overlay.style.right = 'auto';
-      overlay.style.bottom = 'auto';
-    } else if (isResizing) {
-      const deltaX = e.clientX - resizeStart.x;
-      const deltaY = e.clientY - resizeStart.y;
-      
-      const newWidth = Math.max(160, Math.min(resizeStart.width + deltaX, container.offsetWidth * 0.5));
-      const newHeight = Math.max(120, Math.min(resizeStart.height + deltaY, container.offsetHeight * 0.5));
-      
-      overlay.style.width = `${newWidth}px`;
-      overlay.style.height = `${newHeight}px`;
-    }
-  }, [isDragging, isResizing, dragOffset, resizeStart]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!overlayRef.current || !containerRef.current) return;
+
+      const container = containerRef.current;
+      const overlay = overlayRef.current;
+      const containerRect = container.getBoundingClientRect();
+
+      if (isDragging) {
+        const newX = e.clientX - containerRect.left - dragOffset.x;
+        const newY = e.clientY - containerRect.top - dragOffset.y;
+
+        // Constrain within container bounds
+        const maxX = container.offsetWidth - overlay.offsetWidth;
+        const maxY = container.offsetHeight - overlay.offsetHeight;
+
+        const constrainedX = Math.max(0, Math.min(newX, maxX));
+        const constrainedY = Math.max(0, Math.min(newY, maxY));
+
+        overlay.style.left = `${constrainedX}px`;
+        overlay.style.top = `${constrainedY}px`;
+        overlay.style.right = 'auto';
+        overlay.style.bottom = 'auto';
+      } else if (isResizing) {
+        const deltaX = e.clientX - resizeStart.x;
+        const deltaY = e.clientY - resizeStart.y;
+
+        const newWidth = Math.max(160, Math.min(resizeStart.width + deltaX, container.offsetWidth * 0.5));
+        const newHeight = Math.max(120, Math.min(resizeStart.height + deltaY, container.offsetHeight * 0.5));
+
+        overlay.style.width = `${newWidth}px`;
+        overlay.style.height = `${newHeight}px`;
+      }
+    },
+    [isDragging, isResizing, dragOffset, resizeStart],
+  );
 
   const handleMouseUp = useCallback(() => {
     const wasDraggingOrResizing = isDragging || isResizing;
-    
+
     setIsDragging(false);
     setIsResizing(false);
-    
+
     // If we were dragging or resizing, prevent click events for a short time
     if (wasDraggingOrResizing) {
       setJustFinishedOperation(true);
@@ -109,22 +112,25 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   }, [isDragging, isResizing]);
 
   // View switching handler
-  const handleViewSwitch = useCallback((e: React.MouseEvent) => {
-    // Prevent switching if we just finished a drag or resize operation
-    if (justFinishedOperation || isDragging || isResizing) {
-      e.preventDefault();
-      return;
-    }
-    
-    setIsViewSwitched(!isViewSwitched);
-  }, [isViewSwitched, justFinishedOperation, isDragging, isResizing]);
+  const handleViewSwitch = useCallback(
+    (e: React.MouseEvent) => {
+      // Prevent switching if we just finished a drag or resize operation
+      if (justFinishedOperation || isDragging || isResizing) {
+        e.preventDefault();
+        return;
+      }
+
+      setIsViewSwitched(!isViewSwitched);
+    },
+    [isViewSwitched, justFinishedOperation, isDragging, isResizing],
+  );
 
   // Handle mouse events for dragging and resizing
   useEffect(() => {
     if (isDragging || isResizing) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -138,7 +144,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
       try {
         // Always stop the track first to avoid conflicts
         localVideoTrack.stop();
-        
+
         // Add a small delay to ensure the stop operation completes
         setTimeout(() => {
           try {
@@ -158,12 +164,11 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
             console.error('Failed to play local video track after delay:', error);
           }
         }, 50);
-        
       } catch (error) {
         console.error('Failed to stop local video track:', error);
       }
     }
-    
+
     // Cleanup when track is removed or component unmounts
     return () => {
       if (localVideoTrack) {
@@ -190,7 +195,15 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             />
           ) : (
-            <video id="placeholder-video" hidden={isJoined} src={avatarVideoUrl} loop muted playsInline autoPlay></video>
+            <video
+              id="placeholder-video"
+              hidden={isJoined}
+              src={avatarVideoUrl}
+              loop
+              muted
+              playsInline
+              autoPlay
+            ></video>
           )}
           <video id="remote-video"></video>
         </>
@@ -204,30 +217,30 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
           <video id="remote-video" style={{ display: 'none' }}></video>
         </>
       )}
-      
+
       {/* Local camera preview overlay - shows avatar when switched */}
       {cameraEnabled && localVideoTrack && (
-        <div 
+        <div
           ref={overlayRef}
           className={`local-video-overlay ${isDragging ? 'dragging' : ''} ${isResizing ? 'resizing' : ''} ${isViewSwitched ? 'switching' : ''}`}
           onClick={handleViewSwitch}
         >
           {/* Custom drag handle */}
-          <div 
+          <div
             className="drag-handle"
             onMouseDown={handleDragStart}
             onClick={(e) => e.stopPropagation()}
             title="Drag to move"
           />
-          
+
           {/* Custom resize handle */}
-          <div 
+          <div
             className="resize-handle"
             onMouseDown={handleResizeStart}
             onClick={(e) => e.stopPropagation()}
             title="Drag to resize"
           />
-          
+
           <div ref={localVideoRef} className="local-video-container">
             {isViewSwitched && (
               // When switched, show avatar in the overlay
@@ -239,9 +252,19 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                 ) : (
-                  <video src={avatarVideoUrl} loop muted playsInline autoPlay style={{ width: '100%', height: '100%', objectFit: 'contain' }}></video>
+                  <video
+                    src={avatarVideoUrl}
+                    loop
+                    muted
+                    playsInline
+                    autoPlay
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  ></video>
                 )}
-                <div id="remote-video-overlay" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}></div>
+                <div
+                  id="remote-video-overlay"
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                ></div>
               </>
             )}
           </div>

@@ -1,6 +1,5 @@
 :root {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -30,7 +29,9 @@ button {
 }
 
 /* Prevent text selection on interactive elements */
-button, input, select {
+button,
+input,
+select {
   user-select: none;
 }
 

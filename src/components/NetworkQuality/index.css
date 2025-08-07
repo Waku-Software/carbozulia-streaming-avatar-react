@@ -69,17 +69,17 @@
 }
 
 .quality-good {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
 }
 
 .quality-fair {
-  background-color: #FFC107;
+  background-color: #ffc107;
   box-shadow: 0 0 8px rgba(255, 193, 7, 0.5);
 }
 
 .quality-poor {
-  background-color: #F44336;
+  background-color: #f44336;
   box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
 }
 
@@ -89,13 +89,15 @@
   gap: 16px;
 }
 
-.video-stats, .audio-stats {
+.video-stats,
+.audio-stats {
   background: rgba(255, 255, 255, 0.1);
   padding: 16px;
   border-radius: 8px;
 }
 
-.video-stats h4, .audio-stats h4 {
+.video-stats h4,
+.audio-stats h4 {
   margin: 0 0 12px 0;
   color: #fff;
   font-size: 16px;
@@ -103,7 +105,8 @@
   padding-bottom: 8px;
 }
 
-.video-stats > div, .audio-stats > div {
+.video-stats > div,
+.audio-stats > div {
   display: flex;
   justify-content: space-between;
   padding: 4px 0;
@@ -111,13 +114,13 @@
   font-size: 13px;
 }
 
-.video-stats > div:not(:last-child), 
+.video-stats > div:not(:last-child),
 .audio-stats > div:not(:last-child) {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Add hover effect for stats rows */
-.video-stats > div:hover, 
+.video-stats > div:hover,
 .audio-stats > div:hover {
   background: rgba(255, 255, 255, 0.05);
 }
@@ -140,20 +143,20 @@
     top: 10px;
     right: 10px;
   }
-  
+
   .stats-section {
     grid-template-columns: 1fr;
   }
-  
+
   .quality-section {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .quality-section > div {
     justify-content: space-between;
   }
-} 
+}
 
 /* Add animation for opening/closing */
 @keyframes slideIn {
@@ -169,7 +172,7 @@
 
 .network-quality {
   animation: slideIn 0.3s ease;
-} 
+}
 
 /* Add to existing CSS */
 .latency-chart {
@@ -184,4 +187,4 @@
 .network-quality {
   min-width: 300px;
   max-width: 600px;
-} 
+}
