@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RTCClient, interruptResponse } from '../../agoraHelper';
 import { useMessageState, SystemEventType, UserTriggeredEventType } from '../../hooks/useMessageState';
 import { useAgora } from '../../contexts/AgoraContext';
@@ -28,6 +28,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { setIsAvatarSpeaking } = useAgora();
+  const [hasAvatarStartedSpeaking, setHasAvatarStartedSpeaking] = useState(false);
 
   const {
     messages,
@@ -59,10 +60,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           const { event } = pld;
           if (event === 'audio_start') {
             setIsAvatarSpeaking(true);
+            setHasAvatarStartedSpeaking(true);
+            console.log('Avatar started speaking - will now show "finished speaking" messages');
             addReceivedMessage(`event_${mid}`, '🎤 Avatar started speaking', true, SystemEventType.AVATAR_AUDIO_START);
           } else if (event === 'audio_end') {
             setIsAvatarSpeaking(false);
-            addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', true, SystemEventType.AVATAR_AUDIO_END);
+            // Only show "Avatar finished speaking" message if:
+            // 1. The avatar has actually started speaking in this session, AND
+            // 2. There are actual chat messages in the conversation (not just system messages)
+            const hasChatMessages = messages.some(msg => !msg.isSystemMessage);
+            if (hasAvatarStartedSpeaking && hasChatMessages) {
+              addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', true, SystemEventType.AVATAR_AUDIO_END);
+            } else {
+              console.log('Suppressing "Avatar finished speaking" message:', {
+                hasAvatarStartedSpeaking,
+                hasChatMessages,
+                messageCount: messages.length,
+                chatMessageCount: messages.filter(msg => !msg.isSystemMessage).length
+              });
+            }
           }
           // Log any other events for debugging
           else {
@@ -95,7 +111,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         console.error('Message body:', body);
       }
     },
-    [setIsAvatarSpeaking, addReceivedMessage],
+    [setIsAvatarSpeaking, addReceivedMessage, hasAvatarStartedSpeaking, messages],
   );
 
   // Set up stream message listener
@@ -111,6 +127,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   }, [client, connected, handleStreamMessage]);
 
+  // Reset avatar speaking state when connection is established
+  useEffect(() => {
+    if (connected) {
+      setHasAvatarStartedSpeaking(false);
+    }
+  }, [connected]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -119,6 +142,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (!connected) {
       clearMessages();
+      // Reset the avatar speaking state when connection is lost
+      setHasAvatarStartedSpeaking(false);
     }
   }, [connected, clearMessages]);
 
