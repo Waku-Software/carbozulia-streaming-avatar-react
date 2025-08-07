@@ -30,6 +30,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const { setIsAvatarSpeaking } = useAgora();
   const [hasAvatarStartedSpeaking, setHasAvatarStartedSpeaking] = useState(false);
 
+  // Add state for resizable height
+  const [chatHeight, setChatHeight] = useState(400);
+  const [isResizing, setIsResizing] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [startHeight, setStartHeight] = useState(0);
+
   const {
     messages,
     inputMessage,
@@ -43,6 +49,58 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     client,
     connected,
   });
+
+  // Handle mouse down on resize handle
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      console.log('Resize handle clicked!', e.clientY);
+      e.preventDefault();
+      setIsResizing(true);
+      setStartY(e.clientY);
+      setStartHeight(chatHeight);
+    },
+    [chatHeight],
+  );
+
+  // Handle mouse move for resizing
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const deltaY = startY - e.clientY;
+      const maxHeight = window.innerHeight - 40; // Leave some margin from top
+      const newHeight = Math.max(200, Math.min(maxHeight, startHeight + deltaY));
+      console.log('Resizing:', { deltaY, newHeight, maxHeight, startY: e.clientY });
+      setChatHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, startY, startHeight]);
+
+  // Handle window resize to adjust max height
+  useEffect(() => {
+    const handleWindowResize = () => {
+      const maxHeight = window.innerHeight - 40;
+      if (chatHeight > maxHeight) {
+        setChatHeight(maxHeight);
+      }
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+    return () => window.removeEventListener('resize', handleWindowResize);
+  }, [chatHeight]);
 
   const handleStreamMessage = useCallback(
     (_: number, body: Uint8Array) => {
@@ -68,7 +126,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             // Only show "Avatar finished speaking" message if:
             // 1. The avatar has actually started speaking in this session, AND
             // 2. There are actual chat messages in the conversation (not just system messages)
-            const hasChatMessages = messages.some(msg => !msg.isSystemMessage);
+            const hasChatMessages = messages.some((msg) => !msg.isSystemMessage);
             if (hasAvatarStartedSpeaking && hasChatMessages) {
               addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', true, SystemEventType.AVATAR_AUDIO_END);
             } else {
@@ -76,7 +134,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 hasAvatarStartedSpeaking,
                 hasChatMessages,
                 messageCount: messages.length,
-                chatMessageCount: messages.filter(msg => !msg.isSystemMessage).length
+                chatMessageCount: messages.filter((msg) => !msg.isSystemMessage).length,
               });
             }
           }
@@ -192,7 +250,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className="chat-window">
+    <div className={`chat-window ${isResizing ? 'resizing' : ''}`} style={{ height: `${chatHeight}px` }}>
+      <div
+        className="resize-handle"
+        onMouseDown={handleMouseDown}
+        title={`Drag to resize chat window (current height: ${chatHeight}px)`}
+      >
+        <div className="resize-indicator"></div>
+        <div className="resize-dots">
+          <span>•</span>
+          <span>•</span>
+          <span>•</span>
+        </div>
+        <div className="resize-text">↕ Drag to resize</div>
+      </div>
       <div className="chat-messages">
         {messages.map((message, index) => {
           const previousMessage = index > 0 ? messages[index - 1] : undefined;
