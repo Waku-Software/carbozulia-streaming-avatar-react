@@ -165,15 +165,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
 
         if (type === 'chat') {
-          const { text } = pld;
-          addReceivedMessage(`${type}_${mid}`, text);
+          const { text, from } = pld;
+          const isSentByMe = from === 'user';
+          addReceivedMessage(`${type}_${mid}`, text, isSentByMe);
         } else if (type === 'event') {
           const { event } = pld;
           if (event === 'audio_start') {
             setIsAvatarSpeaking(true);
             setHasAvatarStartedSpeaking(true);
             console.log('Avatar started speaking - will now show "finished speaking" messages');
-            addReceivedMessage(`event_${mid}`, '🎤 Avatar started speaking', true, SystemEventType.AVATAR_AUDIO_START);
+            addReceivedMessage(`event_${mid}`, '🎤 Avatar started speaking', false, true, SystemEventType.AVATAR_AUDIO_START);
           } else if (event === 'audio_end') {
             setIsAvatarSpeaking(false);
             // Only show "Avatar finished speaking" message if:
@@ -181,7 +182,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             // 2. There are actual chat messages in the conversation (not just system messages)
             const hasChatMessages = messages.some((msg) => !msg.isSystemMessage);
             if (hasAvatarStartedSpeaking && hasChatMessages) {
-              addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', true, SystemEventType.AVATAR_AUDIO_END);
+              addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', false, true, SystemEventType.AVATAR_AUDIO_END);
             } else {
               console.log('Suppressing "Avatar finished speaking" message:', {
                 hasAvatarStartedSpeaking,
@@ -193,7 +194,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           }
           // Log any other events for debugging
           else {
-            addReceivedMessage(`event_${mid}`, `📋 Event: ${event}`, true);
+            addReceivedMessage(`event_${mid}`, `📋 Event: ${event}`, false, true);
           }
         } else if (type === 'command') {
           // Handle command acknowledgments
@@ -206,6 +207,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             addReceivedMessage(
               `cmd_ack_${mid}`,
               `${status} ${cmd}: ${statusText}${msg ? ` (${msg})` : ''}`,
+              false,
               true,
               systemType,
             );
@@ -224,7 +226,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               messageText,
             });
 
-            addReceivedMessage(`cmd_send_${mid}`, messageText, true, systemType, metadata);
+            addReceivedMessage(`cmd_send_${mid}`, messageText, false, true, systemType, metadata);
           }
         }
       } catch (error) {
@@ -259,7 +261,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (onSystemMessageCallback) {
       onSystemMessageCallback((messageId, text, systemType, metadata) => {
-        addReceivedMessage(messageId, text, true, systemType as SystemEventType, metadata);
+        addReceivedMessage(messageId, text, false, true, systemType as SystemEventType, metadata);
       });
     }
   }, [onSystemMessageCallback, addReceivedMessage]);
@@ -286,9 +288,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       await toggleMic();
       // Add system message for user audio state change
       if (micEnabled) {
-        addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', true, SystemEventType.MIC_END);
+        addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', false, true, SystemEventType.MIC_END);
       } else {
-        addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', true, SystemEventType.MIC_START);
+        addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', false, true, SystemEventType.MIC_START);
       }
       return;
     }
@@ -296,10 +298,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     // Fallback implementation if toggleMic is not provided
     if (!micEnabled) {
       setMicEnabled(true);
-      addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', true, SystemEventType.MIC_START);
+      addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', false, true, SystemEventType.MIC_START);
     } else {
       setMicEnabled(false);
-      addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', true, SystemEventType.MIC_END);
+      addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', false, true, SystemEventType.MIC_END);
     }
   };
 
@@ -309,9 +311,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     try {
       // Add system message for video state change
       if (cameraEnabled) {
-        addReceivedMessage(`camera_${Date.now()}`, '📷 User camera disabled', true, SystemEventType.CAMERA_END);
+        addReceivedMessage(`camera_${Date.now()}`, '📷 User camera disabled', false, true, SystemEventType.CAMERA_END);
       } else {
-        addReceivedMessage(`camera_${Date.now()}`, '📹 User camera enabled', true, SystemEventType.CAMERA_START);
+        addReceivedMessage(`camera_${Date.now()}`, '📹 User camera enabled', false, true, SystemEventType.CAMERA_START);
       }
 
       // Toggle the camera
@@ -402,6 +404,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 addReceivedMessage(
                   `interrupt_${Date.now()}`,
                   '🛑 User interrupted response',
+                  false,
                   true,
                   SystemEventType.INTERRUPT,
                 );

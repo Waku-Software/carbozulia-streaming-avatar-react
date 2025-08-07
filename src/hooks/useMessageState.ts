@@ -52,6 +52,7 @@ interface UseMessageStateReturn {
   addReceivedMessage: (
     messageId: string,
     text: string,
+    isSentByMe?: boolean,
     isSystemMessage?: boolean,
     systemType?: SystemEventType,
     metadata?: Message['metadata'],
@@ -139,6 +140,7 @@ export const useMessageState = ({
     (
       messageId: string,
       text: string,
+      isSentByMe: boolean = false,
       isSystemMessage: boolean = false,
       systemType?: SystemEventType,
       metadata?: Message['metadata'],
@@ -152,7 +154,7 @@ export const useMessageState = ({
             {
               id: `${messageId}_${currentTime}`,
               text,
-              isSentByMe: false,
+              isSentByMe,
               isSystemMessage,
               systemType,
               timestamp: currentTime,
@@ -179,7 +181,7 @@ export const useMessageState = ({
           {
             id: messageId,
             text,
-            isSentByMe: false,
+            isSentByMe,
             isSystemMessage,
             systemType,
             timestamp: currentTime,
