@@ -10,8 +10,7 @@
     "build:ci": "tsc && vite build --mode ci",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "prettier --write src",
-    "preview": "vite preview",
-    "deploy": "rsync -av dist/ stream-aigc.test.vpc.akool:/home/ubuntu/deploy/real-time-web/agora"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
