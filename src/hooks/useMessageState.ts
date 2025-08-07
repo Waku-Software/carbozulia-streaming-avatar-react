@@ -29,6 +29,7 @@ export interface Message {
   isSentByMe: boolean;
   isSystemMessage?: boolean;
   systemType?: SystemEventType;
+  timestamp: number;
 }
 
 interface UseMessageStateProps {
@@ -50,7 +51,33 @@ interface UseMessageStateReturn {
     systemType?: SystemEventType,
   ) => void;
   cleanupOldSystemMessages: () => void;
+  formatTime: (timestamp: number) => string;
+  shouldShowTimeSeparator: (currentMessage: Message, previousMessage: Message | undefined) => boolean;
 }
+
+// Utility function to format timestamp as HH:mm
+const formatTime = (timestamp: number): string => {
+  return new Date(timestamp).toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+};
+
+// Utility function to check if time separator should be shown
+const shouldShowTimeSeparator = (currentMessage: Message, previousMessage: Message | undefined): boolean => {
+  if (!previousMessage) return false;
+  const timeDiff = currentMessage.timestamp - previousMessage.timestamp;
+
+  // Show separator if gap is more than 30 seconds
+  if (timeDiff > 30000) return true;
+
+  // Show separator every 5 minutes (300000 ms) regardless of gap
+  const currentMinute = Math.floor(currentMessage.timestamp / 300000);
+  const previousMinute = Math.floor(previousMessage.timestamp / 300000);
+
+  return currentMinute > previousMinute;
+};
 
 export const useMessageState = ({
   client,
@@ -85,6 +112,7 @@ export const useMessageState = ({
       id: messageId,
       text: inputMessage,
       isSentByMe: true,
+      timestamp: Date.now(),
     };
 
     setMessages((prev) => [...prev, newMessage]);
@@ -104,16 +132,18 @@ export const useMessageState = ({
   const addReceivedMessage = useCallback(
     (messageId: string, text: string, isSystemMessage: boolean = false, systemType?: SystemEventType) => {
       setMessages((prev) => {
+        const currentTime = Date.now();
         // For system messages, always create a new message to avoid concatenation
         if (isSystemMessage) {
           return [
             ...prev,
             {
-              id: `${messageId}_${Date.now()}`,
+              id: `${messageId}_${currentTime}`,
               text,
               isSentByMe: false,
               isSystemMessage,
               systemType,
+              timestamp: currentTime,
             },
           ];
         }
@@ -138,6 +168,7 @@ export const useMessageState = ({
             isSentByMe: false,
             isSystemMessage,
             systemType,
+            timestamp: currentTime,
           },
         ];
       });
@@ -184,5 +215,7 @@ export const useMessageState = ({
     clearMessages,
     addReceivedMessage,
     cleanupOldSystemMessages,
+    formatTime,
+    shouldShowTimeSeparator,
   };
 };

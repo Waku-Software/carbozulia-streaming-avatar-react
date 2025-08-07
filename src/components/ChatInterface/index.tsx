@@ -29,7 +29,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { setIsAvatarSpeaking } = useAgora();
 
-  const { messages, inputMessage, setInputMessage, sendMessage, addReceivedMessage, clearMessages } = useMessageState({
+  const {
+    messages,
+    inputMessage,
+    setInputMessage,
+    sendMessage,
+    addReceivedMessage,
+    clearMessages,
+    formatTime,
+    shouldShowTimeSeparator,
+  } = useMessageState({
     client,
     connected,
   });
@@ -160,14 +169,24 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   return (
     <div className="chat-window">
       <div className="chat-messages">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`chat-message ${message.isSentByMe ? 'sent' : 'received'} ${message.isSystemMessage ? `system ${message.systemType || ''}` : ''}`}
-          >
-            {message.text}
-          </div>
-        ))}
+        {messages.map((message, index) => {
+          const previousMessage = index > 0 ? messages[index - 1] : undefined;
+          const showTimeSeparator = shouldShowTimeSeparator(message, previousMessage);
+          const isFirstMessage = index === 0;
+
+          return (
+            <div key={message.id}>
+              {(isFirstMessage || showTimeSeparator) && (
+                <div className="time-separator">{formatTime(message.timestamp)}</div>
+              )}
+              <div
+                className={`chat-message ${message.isSentByMe ? 'sent' : 'received'} ${message.isSystemMessage ? `system ${message.systemType || ''}` : ''}`}
+              >
+                {message.text}
+              </div>
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
       <div className="chat-input">
