@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { RTCClient, interruptResponse } from '../../agoraHelper';
-import { useMessageState } from '../../hooks/useMessageState';
+import { useMessageState, SystemEventType, UserTriggeredEventType } from '../../hooks/useMessageState';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
 
@@ -13,6 +13,7 @@ interface ChatInterfaceProps {
   cameraEnabled: boolean;
   toggleCamera: () => Promise<void>;
   cameraError?: string | null;
+  onSystemEvent?: (type: UserTriggeredEventType, message: string) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -33,33 +34,60 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     connected,
   });
 
-  const handleStreamMessage = useCallback((_: number, body: Uint8Array) => {
-    try {
-      const msg = new TextDecoder().decode(body);
-      const { v, type, mid, pld } = JSON.parse(msg);
-      if (v !== 2) {
-        return;
-      }
-      
-      if (type === 'chat') {
-        const { text } = pld;
-        addReceivedMessage(`${type}_${mid}`, text);
-      } else if (type === 'event') {
-        const { event } = pld;
-        if (event === 'audio_start') {
-          setIsAvatarSpeaking(true);
-        } else if (event === 'audio_end') {
-          setIsAvatarSpeaking(false);
+  const handleStreamMessage = useCallback(
+    (_: number, body: Uint8Array) => {
+      try {
+        const msg = new TextDecoder().decode(body);
+        const { v, type, mid, pld } = JSON.parse(msg);
+        if (v !== 2) {
+          return;
         }
-        // Log any other events for debugging
-        else {
+
+        if (type === 'chat') {
+          const { text } = pld;
+          addReceivedMessage(`${type}_${mid}`, text);
+        } else if (type === 'event') {
+          const { event } = pld;
+          if (event === 'audio_start') {
+            setIsAvatarSpeaking(true);
+            addReceivedMessage(`event_${mid}`, '🎤 Avatar started speaking', true, SystemEventType.AVATAR_AUDIO_START);
+          } else if (event === 'audio_end') {
+            setIsAvatarSpeaking(false);
+            addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', true, SystemEventType.AVATAR_AUDIO_END);
+          }
+          // Log any other events for debugging
+          else {
+            addReceivedMessage(`event_${mid}`, `📋 Event: ${event}`, true);
+          }
+        } else if (type === 'command') {
+          // Handle command acknowledgments
+          const { cmd, code, msg } = pld;
+          if (code !== undefined) {
+            // This is a command acknowledgment
+            const status = code === 1000 ? '✅' : '❌';
+            const statusText = code === 1000 ? 'Success' : 'Failed';
+            const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT_ACK : SystemEventType.SET_PARAMS_ACK;
+            addReceivedMessage(
+              `cmd_ack_${mid}`,
+              `${status} ${cmd}: ${statusText}${msg ? ` (${msg})` : ''}`,
+              true,
+              systemType,
+            );
+          } else {
+            // This is a command being sent
+            const { data } = pld;
+            const dataStr = data ? ` with data: ${JSON.stringify(data)}` : '';
+            const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT : SystemEventType.SET_PARAMS;
+            addReceivedMessage(`cmd_send_${mid}`, `📤 ${cmd}${dataStr}`, true, systemType);
+          }
         }
+      } catch (error) {
+        console.error('Error handling stream message:', error);
+        console.error('Message body:', body);
       }
-    } catch (error) {
-      console.error('Error handling stream message:', error);
-      console.error('Message body:', body);
-    }
-  }, [setIsAvatarSpeaking, addReceivedMessage]);
+    },
+    [setIsAvatarSpeaking, addReceivedMessage],
+  );
 
   // Set up stream message listener
   useEffect(() => {
@@ -92,14 +120,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const toggleMicInternal = async () => {
     if (toggleMic) {
       await toggleMic();
+      // Add system message for user audio state change
+      if (micEnabled) {
+        addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', true, SystemEventType.MIC_END);
+      } else {
+        addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', true, SystemEventType.MIC_START);
+      }
       return;
     }
 
     // Fallback implementation if toggleMic is not provided
     if (!micEnabled) {
       setMicEnabled(true);
+      addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', true, SystemEventType.MIC_START);
     } else {
       setMicEnabled(false);
+      addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', true, SystemEventType.MIC_END);
     }
   };
 
@@ -107,6 +143,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     if (!connected) return;
 
     try {
+      // Add system message for video state change
+      if (cameraEnabled) {
+        addReceivedMessage(`camera_${Date.now()}`, '📷 User camera disabled', true, SystemEventType.CAMERA_END);
+      } else {
+        addReceivedMessage(`camera_${Date.now()}`, '📹 User camera enabled', true, SystemEventType.CAMERA_START);
+      }
+
       // Toggle the camera
       await toggleCamera();
     } catch (error) {
@@ -118,7 +161,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     <div className="chat-window">
       <div className="chat-messages">
         {messages.map((message) => (
-          <div key={message.id} className={`chat-message ${message.isSentByMe ? 'sent' : 'received'}`}>
+          <div
+            key={message.id}
+            className={`chat-message ${message.isSentByMe ? 'sent' : 'received'} ${message.isSystemMessage ? `system ${message.systemType || ''}` : ''}`}
+          >
             {message.text}
           </div>
         ))}
@@ -161,7 +207,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <span className="material-icons">send</span>
             </button>
             <button
-              onClick={() => interruptResponse(client)}
+              onClick={() => {
+                // Add system message for interrupt
+                addReceivedMessage(
+                  `interrupt_${Date.now()}`,
+                  '🛑 User interrupted response',
+                  true,
+                  SystemEventType.INTERRUPT,
+                );
+                interruptResponse(client, (cmd) => {
+                  console.log(`Interrupt command sent: ${cmd}`);
+                });
+              }}
               disabled={!connected}
               className={`icon-button ${!connected ? 'disabled' : ''}`}
               title="Interrupt response"

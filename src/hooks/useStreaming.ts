@@ -120,7 +120,7 @@ export const useStreaming = (
       log(`unsupported message version, v=${v}`);
       return;
     }
-    if (type === 'cmd') {
+    if (type === 'command') {
       const { cmd, code, msg } = pld as CommandResponsePayload;
       log(`cmd-response, cmd=${cmd}, code=${code}, msg=${msg}`);
       if (code !== 1000) {
@@ -197,7 +197,7 @@ export const useStreaming = (
       console.log('Skipping avatar params update: client not ready', {
         hasClient: !!client,
         isJoined: state.isJoined,
-        connected: state.connected
+        connected: state.connected,
       });
       return;
     }
@@ -211,7 +211,10 @@ export const useStreaming = (
       voiceParams,
     });
 
-    await setAvatarParams(client, metadata);
+    // Pass a callback to track command sends
+    await setAvatarParams(client, metadata, (cmd, data) => {
+      console.log(`Command sent: ${cmd}`, data);
+    });
   }, [client, state.isJoined, state.connected, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
 
   const joinChat = useCallback(async () => {
@@ -222,18 +225,15 @@ export const useStreaming = (
   }, [client, onStreamMessage]);
 
   const leaveChat = useCallback(async () => {
-    // Remove only the specific stream message listener we added
-    const messageHandler = onStreamMessage;
-    client.off('stream-message', messageHandler);
     updateState({ connected: false });
-  }, [client, onStreamMessage]);
+  }, []);
 
   // Auto-update avatar params when they change during active session
   useEffect(() => {
     if (state.isJoined && state.connected) {
       updateAvatarParams();
     }
-  }, [state.isJoined, state.connected, updateAvatarParams]);
+  }, [state.isJoined, state.connected, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
 
   // Handle local video track publishing/unpublishing
   useEffect(() => {
@@ -314,9 +314,6 @@ export const useStreaming = (
   // Clean up event listeners when component unmounts
   useEffect(() => {
     return () => {
-      // Remove specific listeners we added, not all listeners
-      const messageHandler = onStreamMessage;
-      client.off('stream-message', messageHandler);
       client.removeAllListeners('exception');
       client.removeAllListeners('user-published');
       client.removeAllListeners('user-unpublished');
@@ -324,7 +321,7 @@ export const useStreaming = (
       client.removeAllListeners('token-privilege-did-expire');
       client.removeAllListeners('network-quality');
     };
-  }, [client, onStreamMessage]);
+  }, [client]);
 
   return {
     ...state,

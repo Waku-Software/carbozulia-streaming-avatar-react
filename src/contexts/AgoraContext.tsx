@@ -33,11 +33,13 @@ export const AgoraProvider: React.FC<AgoraProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <AgoraContext.Provider value={{ 
-      client, 
-      isAvatarSpeaking, 
-      setIsAvatarSpeaking: handleSetIsAvatarSpeaking 
-    }}>
+    <AgoraContext.Provider
+      value={{
+        client,
+        isAvatarSpeaking,
+        setIsAvatarSpeaking: handleSetIsAvatarSpeaking,
+      }}
+    >
       {children}
     </AgoraContext.Provider>
   );

@@ -54,12 +54,16 @@ export type StreamMessage = {
   pld: CommandPayload | ChatPayload;
 };
 
-export async function setAvatarParams(client: RTCClient, meta: Metadata) {
+export async function setAvatarParams(
+  client: RTCClient,
+  meta: Metadata,
+  onCommandSend?: (cmd: string, data?: Record<string, unknown>) => void,
+) {
   // Check if client is joined before sending stream message
   if (!isClientReady(client)) {
     console.warn('Cannot send stream message: client not ready', {
       connectionState: client.connectionState,
-      uid: client.uid
+      uid: client.uid,
     });
     return;
   }
@@ -78,15 +82,22 @@ export async function setAvatarParams(client: RTCClient, meta: Metadata) {
   };
   const jsondata = JSON.stringify(message);
   log(`setAvatarParams, size=${jsondata.length}, data=${jsondata}`);
+
+  // Notify about command being sent
+  onCommandSend?.('set-params', cleanedMeta);
+
   return client.sendStreamMessage(jsondata, false);
 }
 
-export async function interruptResponse(client: RTCClient) {
+export async function interruptResponse(
+  client: RTCClient,
+  onCommandSend?: (cmd: string, data?: Record<string, unknown>) => void,
+) {
   // Check if client is joined before sending stream message
   if (!isClientReady(client)) {
     console.warn('Cannot send stream message: client not ready', {
       connectionState: client.connectionState,
-      uid: client.uid
+      uid: client.uid,
     });
     return;
   }
@@ -101,6 +112,10 @@ export async function interruptResponse(client: RTCClient) {
   };
   const jsondata = JSON.stringify(message);
   log(`interuptResponse, size=${jsondata.length}, data=${jsondata}`);
+
+  // Notify about command being sent
+  onCommandSend?.('interrupt');
+
   return client.sendStreamMessage(jsondata, false);
 }
 
@@ -109,7 +124,7 @@ export async function sendMessageToAvatar(client: RTCClient, messageId: string, 
   if (!isClientReady(client)) {
     console.warn('Cannot send stream message: client not ready', {
       connectionState: client.connectionState,
-      uid: client.uid
+      uid: client.uid,
     });
     throw new Error('Client not connected to channel');
   }
@@ -194,5 +209,3 @@ export async function sendMessageToAvatar(client: RTCClient, messageId: string, 
     }
   }
 }
-
-

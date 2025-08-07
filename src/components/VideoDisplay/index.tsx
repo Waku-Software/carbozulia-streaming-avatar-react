@@ -208,7 +208,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
             ></video>
           )}
           <video id="remote-video"></video>
-          
+
           {/* Speaking indicator overlay */}
           {isAvatarSpeaking && (
             <div className="speaking-indicator">
