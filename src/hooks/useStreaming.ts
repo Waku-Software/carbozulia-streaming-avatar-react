@@ -61,6 +61,7 @@ export const useStreaming = (
   voiceParams: Record<string, unknown>,
   api: ApiService | null,
   localVideoTrack: ILocalVideoTrack | null,
+  onSystemMessage?: (messageId: string, text: string, systemType: string, metadata?: Record<string, unknown>) => void,
 ) => {
   const { client } = useAgora();
 
@@ -214,8 +215,26 @@ export const useStreaming = (
     // Pass a callback to track command sends
     await setAvatarParams(client, metadata, (cmd, data) => {
       console.log(`Command sent: ${cmd}`, data);
+
+      // Create system message for the command being sent
+      if (onSystemMessage && cmd === 'set-params' && data) {
+        const messageId = `cmd_send_${Date.now()}`;
+        const messageText = `📤 ${cmd}`;
+        onSystemMessage(messageId, messageText, 'set_params', { fullParams: data });
+      }
     });
-  }, [client, state.isJoined, state.connected, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
+  }, [
+    client,
+    state.isJoined,
+    state.connected,
+    voiceId,
+    voiceUrl,
+    language,
+    modeType,
+    backgroundUrl,
+    voiceParams,
+    onSystemMessage,
+  ]);
 
   const joinChat = useCallback(async () => {
     // Store the handler reference so we can remove only this specific listener

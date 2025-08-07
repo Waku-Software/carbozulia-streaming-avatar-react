@@ -324,3 +324,42 @@
     transform: translateY(0);
   }
 }
+
+/* Tooltip styles */
+.tooltip {
+  pointer-events: none;
+  max-width: 400px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.tooltip-content {
+  background: #2c3e50;
+  color: #ecf0f1;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid #34495e;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.tooltip-content pre {
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
+  color: #bdc3c7;
+}
+
+/* Add a subtle hover effect for set-params messages */
+.chat-message.system.set_params {
+  cursor: help;
+  transition: background-color 0.2s ease;
+}
+
+.chat-message.system.set_params:hover {
+  background: #e3f2fd;
+  border-color: #2196f3;
+}

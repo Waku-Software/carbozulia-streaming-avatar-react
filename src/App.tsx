@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import { ApiService } from './apiService';
 
@@ -31,6 +31,11 @@ function App() {
   const [sessionDuration, setSessionDuration] = useState(10);
   const [api, setApi] = useState<ApiService | null>(null);
 
+  // Ref to store the system message callback
+  const systemMessageCallbackRef = useRef<
+    ((messageId: string, text: string, systemType: string, metadata?: Record<string, unknown>) => void) | null
+  >(null);
+
   useEffect(() => {
     if (openapiHost && openapiToken) {
       setApi(new ApiService(openapiHost, openapiToken));
@@ -51,6 +56,7 @@ function App() {
     voiceParams,
     api,
     localVideoTrack,
+    systemMessageCallbackRef.current || undefined,
   );
 
   // Auto-cleanup camera when streaming stops
@@ -107,6 +113,9 @@ function App() {
           cameraEnabled={cameraEnabled}
           toggleCamera={toggleCamera}
           cameraError={cameraError}
+          onSystemMessageCallback={(callback) => {
+            systemMessageCallbackRef.current = callback;
+          }}
         />
         <div>{isJoined && remoteStats && <NetworkQualityDisplay stats={remoteStats} />}</div>
       </div>

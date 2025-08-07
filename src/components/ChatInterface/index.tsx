@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RTCClient, interruptResponse } from '../../agoraHelper';
-import { useMessageState, SystemEventType, UserTriggeredEventType } from '../../hooks/useMessageState';
+import { useMessageState, SystemEventType, UserTriggeredEventType, Message } from '../../hooks/useMessageState';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
 
@@ -14,6 +14,9 @@ interface ChatInterfaceProps {
   toggleCamera: () => Promise<void>;
   cameraError?: string | null;
   onSystemEvent?: (type: UserTriggeredEventType, message: string) => void;
+  onSystemMessageCallback?: (
+    callback: (messageId: string, text: string, systemType: string, metadata?: Record<string, unknown>) => void,
+  ) => void;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
@@ -25,6 +28,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   cameraEnabled,
   toggleCamera,
   cameraError,
+  onSystemMessageCallback,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { setIsAvatarSpeaking } = useAgora();
@@ -35,6 +39,40 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
+
+  // Tooltip state
+  const [tooltipContent, setTooltipContent] = useState<string>('');
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Tooltip component
+  const Tooltip = ({
+    content,
+    position,
+    visible,
+  }: {
+    content: string;
+    position: { x: number; y: number };
+    visible: boolean;
+  }) => {
+    if (!visible || !content) return null;
+
+    return (
+      <div
+        className="tooltip"
+        style={{
+          position: 'fixed',
+          left: position.x + 10,
+          top: position.y - 10,
+          zIndex: 9999,
+        }}
+      >
+        <div className="tooltip-content">
+          <pre>{content}</pre>
+        </div>
+      </div>
+    );
+  };
 
   const {
     messages,
@@ -102,6 +140,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return () => window.removeEventListener('resize', handleWindowResize);
   }, [chatHeight]);
 
+  // Tooltip event handlers
+  const handleMessageMouseEnter = useCallback((e: React.MouseEvent, message: Message) => {
+    if (message.systemType === SystemEventType.SET_PARAMS && message.metadata?.fullParams) {
+      console.log('Showing tooltip for set-params message:', message.metadata.fullParams);
+      const paramsStr = JSON.stringify(message.metadata.fullParams, null, 2);
+      setTooltipContent(paramsStr);
+      setTooltipPosition({ x: e.clientX, y: e.clientY });
+      setShowTooltip(true);
+    }
+  }, []);
+
+  const handleMessageMouseLeave = useCallback(() => {
+    setShowTooltip(false);
+  }, []);
+
   const handleStreamMessage = useCallback(
     (_: number, body: Uint8Array) => {
       try {
@@ -161,7 +214,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             const { data } = pld;
             const dataStr = data ? ` with data: ${JSON.stringify(data)}` : '';
             const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT : SystemEventType.SET_PARAMS;
-            addReceivedMessage(`cmd_send_${mid}`, `📤 ${cmd}${dataStr}`, true, systemType);
+            const messageText = cmd === 'set-params' && data ? `📤 ${cmd}${dataStr} ℹ️` : `📤 ${cmd}${dataStr}`;
+
+            const metadata = cmd === 'set-params' && data ? { fullParams: data } : undefined;
+            console.log('Creating set-params message:', {
+              cmd,
+              data,
+              metadata,
+              messageText,
+            });
+
+            addReceivedMessage(`cmd_send_${mid}`, messageText, true, systemType, metadata);
           }
         }
       } catch (error) {
@@ -191,6 +254,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       setHasAvatarStartedSpeaking(false);
     }
   }, [connected]);
+
+  // Set up system message callback
+  useEffect(() => {
+    if (onSystemMessageCallback) {
+      onSystemMessageCallback((messageId, text, systemType, metadata) => {
+        addReceivedMessage(messageId, text, true, systemType as SystemEventType, metadata);
+      });
+    }
+  }, [onSystemMessageCallback, addReceivedMessage]);
 
   useEffect(() => {
     scrollToBottom();
@@ -277,6 +349,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               )}
               <div
                 className={`chat-message ${message.isSentByMe ? 'sent' : 'received'} ${message.isSystemMessage ? `system ${message.systemType || ''}` : ''}`}
+                onMouseEnter={(e) => handleMessageMouseEnter(e, message)}
+                onMouseLeave={handleMessageMouseLeave}
               >
                 {message.text}
               </div>
@@ -285,6 +359,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         })}
         <div ref={messagesEndRef} />
       </div>
+      <Tooltip content={tooltipContent} position={tooltipPosition} visible={showTooltip} />
       <div className="chat-input">
         <button
           onClick={toggleMicInternal}

@@ -30,6 +30,11 @@ export interface Message {
   isSystemMessage?: boolean;
   systemType?: SystemEventType;
   timestamp: number;
+  // Additional data for tooltips and other features
+  metadata?: {
+    fullParams?: Record<string, unknown>; // For set-params messages
+    [key: string]: unknown;
+  };
 }
 
 interface UseMessageStateProps {
@@ -49,6 +54,7 @@ interface UseMessageStateReturn {
     text: string,
     isSystemMessage?: boolean,
     systemType?: SystemEventType,
+    metadata?: Message['metadata'],
   ) => void;
   cleanupOldSystemMessages: () => void;
   formatTime: (timestamp: number) => string;
@@ -130,7 +136,13 @@ export const useMessageState = ({
   }, [client, connected, inputMessage, sending]);
 
   const addReceivedMessage = useCallback(
-    (messageId: string, text: string, isSystemMessage: boolean = false, systemType?: SystemEventType) => {
+    (
+      messageId: string,
+      text: string,
+      isSystemMessage: boolean = false,
+      systemType?: SystemEventType,
+      metadata?: Message['metadata'],
+    ) => {
       setMessages((prev) => {
         const currentTime = Date.now();
         // For system messages, always create a new message to avoid concatenation
@@ -144,6 +156,7 @@ export const useMessageState = ({
               isSystemMessage,
               systemType,
               timestamp: currentTime,
+              metadata,
             },
           ];
         }
@@ -156,6 +169,7 @@ export const useMessageState = ({
           newMessages[existingMessageIndex] = {
             ...newMessages[existingMessageIndex],
             text: newMessages[existingMessageIndex].text + text,
+            metadata,
           };
           return newMessages;
         }
@@ -169,6 +183,7 @@ export const useMessageState = ({
             isSystemMessage,
             systemType,
             timestamp: currentTime,
+            metadata,
           },
         ];
       });
