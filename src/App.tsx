@@ -37,7 +37,7 @@ function App() {
     }
   }, [openapiHost, openapiToken]);
 
-  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera } = useVideoCamera();
+  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera, cleanup } = useVideoCamera();
 
   const { isJoined, connected, remoteStats, startStreaming, closeStreaming } = useStreaming(
     avatarId,
@@ -52,6 +52,13 @@ function App() {
     api,
     localVideoTrack,
   );
+
+  // Auto-cleanup camera when streaming stops
+  useEffect(() => {
+    if (!connected && cameraEnabled) {
+      cleanup();
+    }
+  }, [connected, cameraEnabled, cleanup]);
 
   return (
     <>

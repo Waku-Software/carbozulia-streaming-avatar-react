@@ -8,6 +8,7 @@ interface UseVideoCameraReturn {
   enableCamera: () => Promise<void>;
   disableCamera: () => Promise<void>;
   toggleCamera: () => Promise<void>;
+  cleanup: () => Promise<void>;
 }
 
 export const useVideoCamera = (): UseVideoCameraReturn => {
@@ -69,14 +70,13 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
   const disableCamera = useCallback(async () => {
     try {
       if (videoTrackRef.current) {
+        // For regular disable, just disable the track but keep it for reuse
         await videoTrackRef.current.setEnabled(false);
       }
       
       setCameraEnabled(false);
       setLocalVideoTrack(null);
       setCameraError(null);
-      
-
       
       console.log('Camera disabled successfully');
     } catch (error) {
@@ -103,9 +103,6 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
     setCameraError(null);
   }, []);
 
-  // Expose cleanup for external use
-  (toggleCamera as any).cleanup = cleanup;
-
   return {
     cameraEnabled,
     localVideoTrack,
@@ -113,5 +110,6 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
     enableCamera,
     disableCamera,
     toggleCamera,
+    cleanup,
   };
 };
