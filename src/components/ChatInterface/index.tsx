@@ -1,5 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
-import { RTCClient, interruptResponse, sendCameraEvent } from '../../agoraHelper';
+import { RTCClient, interruptResponse } from '../../agoraHelper';
 import { useMessageState } from '../../hooks/useMessageState';
 import './styles.css';
 
@@ -78,17 +78,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const toggleCameraInternal = async () => {
     if (!connected) return;
 
-    const wasEnabled = cameraEnabled;
-
     try {
-      // Toggle the camera first
+      // Toggle the camera
       await toggleCamera();
-
-      // Send the appropriate event based on the previous state
-      const event = wasEnabled ? 'camera_close' : 'camera_open';
-      await sendCameraEvent(client, event);
     } catch (error) {
-      console.error('Failed to toggle camera or send event:', error);
+      console.error('Failed to toggle camera:', error);
     }
   };
 
