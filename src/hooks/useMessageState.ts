@@ -35,9 +35,12 @@ export const useMessageState = ({
   // Set up stream message listener
   useEffect(() => {
     if (connected && onStreamMessage) {
-      client.on('stream-message', onStreamMessage);
+      // Store the handler reference so we can remove only this specific listener
+      const messageHandler = onStreamMessage;
+      client.on('stream-message', messageHandler);
       return () => {
-        client.removeAllListeners('stream-message');
+        // Remove only this specific listener, not all listeners
+        client.off('stream-message', messageHandler);
       };
     }
   }, [client, connected, onStreamMessage]);

@@ -72,6 +72,11 @@
 .chat-input input.disabled {
   background: #f5f5f5;
   cursor: not-allowed;
+  color: #999;
+}
+
+.chat-input input.disabled::placeholder {
+  color: #999;
 }
 
 /* Camera button error state */

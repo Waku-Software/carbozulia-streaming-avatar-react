@@ -10,6 +10,11 @@ export interface RTCClient extends IAgoraRTCClient {
   sendStreamMessage(msg: Uint8Array | string, flag: boolean): Promise<void>;
 }
 
+// Helper function to check if client is ready to send stream messages
+export function isClientReady(client: RTCClient): boolean {
+  return client.connectionState === 'CONNECTED' && client.uid !== undefined;
+}
+
 type Metadata = {
   vid?: string; // voiceId
   vurl?: string; // voiceUrl
@@ -50,6 +55,15 @@ export type StreamMessage = {
 };
 
 export async function setAvatarParams(client: RTCClient, meta: Metadata) {
+  // Check if client is joined before sending stream message
+  if (!isClientReady(client)) {
+    console.warn('Cannot send stream message: client not ready', {
+      connectionState: client.connectionState,
+      uid: client.uid
+    });
+    return;
+  }
+
   // Remove empty or undefined values from meta
   const cleanedMeta = Object.fromEntries(Object.entries(meta).filter(([_, value]) => !!value));
 
@@ -68,6 +82,15 @@ export async function setAvatarParams(client: RTCClient, meta: Metadata) {
 }
 
 export async function interruptResponse(client: RTCClient) {
+  // Check if client is joined before sending stream message
+  if (!isClientReady(client)) {
+    console.warn('Cannot send stream message: client not ready', {
+      connectionState: client.connectionState,
+      uid: client.uid
+    });
+    return;
+  }
+
   const message: StreamMessage = {
     v: 2,
     type: 'command',
@@ -82,6 +105,15 @@ export async function interruptResponse(client: RTCClient) {
 }
 
 export async function sendMessageToAvatar(client: RTCClient, messageId: string, content: string) {
+  // Check if client is joined before sending stream message
+  if (!isClientReady(client)) {
+    console.warn('Cannot send stream message: client not ready', {
+      connectionState: client.connectionState,
+      uid: client.uid
+    });
+    throw new Error('Client not connected to channel');
+  }
+
   // Move constants to top level for better configuration
   const MAX_ENCODED_SIZE = 950;
   const BYTES_PER_SECOND = 6000;

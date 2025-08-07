@@ -193,7 +193,14 @@ export const useStreaming = (
 
   // Custom hook for avatar parameter management
   const updateAvatarParams = useCallback(async () => {
-    if (!client) return;
+    if (!client || !state.isJoined || !state.connected) {
+      console.log('Skipping avatar params update: client not ready', {
+        hasClient: !!client,
+        isJoined: state.isJoined,
+        connected: state.connected
+      });
+      return;
+    }
 
     const metadata = buildAvatarMetadata({
       voiceId,
@@ -205,25 +212,28 @@ export const useStreaming = (
     });
 
     await setAvatarParams(client, metadata);
-  }, [client, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
+  }, [client, state.isJoined, state.connected, voiceId, voiceUrl, language, modeType, backgroundUrl, voiceParams]);
 
   const joinChat = useCallback(async () => {
-    client.on('stream-message', onStreamMessage);
+    // Store the handler reference so we can remove only this specific listener
+    const messageHandler = onStreamMessage;
+    client.on('stream-message', messageHandler);
     updateState({ connected: true });
-    await updateAvatarParams();
-  }, [client, onStreamMessage, updateAvatarParams]);
+  }, [client, onStreamMessage]);
 
   const leaveChat = useCallback(async () => {
-    client.removeAllListeners('stream-message');
+    // Remove only the specific stream message listener we added
+    const messageHandler = onStreamMessage;
+    client.off('stream-message', messageHandler);
     updateState({ connected: false });
-  }, [client]);
+  }, [client, onStreamMessage]);
 
   // Auto-update avatar params when they change during active session
   useEffect(() => {
-    if (state.connected) {
+    if (state.isJoined && state.connected) {
       updateAvatarParams();
     }
-  }, [state.connected, updateAvatarParams]);
+  }, [state.isJoined, state.connected, updateAvatarParams]);
 
   // Handle local video track publishing/unpublishing
   useEffect(() => {
@@ -304,9 +314,17 @@ export const useStreaming = (
   // Clean up event listeners when component unmounts
   useEffect(() => {
     return () => {
-      client.removeAllListeners();
+      // Remove specific listeners we added, not all listeners
+      const messageHandler = onStreamMessage;
+      client.off('stream-message', messageHandler);
+      client.removeAllListeners('exception');
+      client.removeAllListeners('user-published');
+      client.removeAllListeners('user-unpublished');
+      client.removeAllListeners('token-privilege-will-expire');
+      client.removeAllListeners('token-privilege-did-expire');
+      client.removeAllListeners('network-quality');
     };
-  }, [client]);
+  }, [client, onStreamMessage]);
 
   return {
     ...state,

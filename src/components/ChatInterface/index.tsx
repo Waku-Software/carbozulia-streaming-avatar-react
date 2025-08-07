@@ -1,6 +1,7 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { RTCClient, interruptResponse } from '../../agoraHelper';
 import { useMessageState } from '../../hooks/useMessageState';
+import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
 
 interface ChatInterfaceProps {
@@ -25,25 +26,53 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   cameraError,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const handleStreamMessage = useCallback((_: number, body: Uint8Array) => {
-    const msg = new TextDecoder().decode(body);
-    const { v, type, mid, pld } = JSON.parse(msg);
-    if (v !== 2) {
-      console.log(`unsupported message version, v=${v}`);
-      return;
-    }
-    if (type === 'chat') {
-      const { text } = pld;
-      addReceivedMessage(`${type}_${mid}`, text);
-    }
-  }, []);
+  const { setIsAvatarSpeaking } = useAgora();
 
   const { messages, inputMessage, setInputMessage, sendMessage, addReceivedMessage, clearMessages } = useMessageState({
     client,
     connected,
-    onStreamMessage: handleStreamMessage,
   });
+
+  const handleStreamMessage = useCallback((_: number, body: Uint8Array) => {
+    try {
+      const msg = new TextDecoder().decode(body);
+      const { v, type, mid, pld } = JSON.parse(msg);
+      if (v !== 2) {
+        return;
+      }
+      
+      if (type === 'chat') {
+        const { text } = pld;
+        addReceivedMessage(`${type}_${mid}`, text);
+      } else if (type === 'event') {
+        const { event } = pld;
+        if (event === 'audio_start') {
+          setIsAvatarSpeaking(true);
+        } else if (event === 'audio_end') {
+          setIsAvatarSpeaking(false);
+        }
+        // Log any other events for debugging
+        else {
+        }
+      }
+    } catch (error) {
+      console.error('Error handling stream message:', error);
+      console.error('Message body:', body);
+    }
+  }, [setIsAvatarSpeaking, addReceivedMessage]);
+
+  // Set up stream message listener
+  useEffect(() => {
+    if (connected) {
+      // Store the handler reference so we can remove only this specific listener
+      const messageHandler = handleStreamMessage;
+      client.on('stream-message', messageHandler);
+      return () => {
+        // Remove only this specific listener, not all listeners
+        client.off('stream-message', messageHandler);
+      };
+    }
+  }, [client, connected, handleStreamMessage]);
 
   useEffect(() => {
     scrollToBottom();
@@ -72,7 +101,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     } else {
       setMicEnabled(false);
     }
-    console.log(`Microphone is now ${micEnabled ? 'enabled' : 'disabled'}`);
   };
 
   const toggleCameraInternal = async () => {

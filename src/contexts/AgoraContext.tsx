@@ -1,10 +1,12 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useCallback, useMemo } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { RTCClient } from '../agoraHelper';
 
 // Create the context with default value
 interface AgoraContextType {
   client: RTCClient;
+  isAvatarSpeaking: boolean;
+  setIsAvatarSpeaking: (speaking: boolean) => void;
 }
 
 const AgoraContext = createContext<AgoraContextType | undefined>(undefined);
@@ -15,13 +17,30 @@ interface AgoraProviderProps {
 }
 
 export const AgoraProvider: React.FC<AgoraProviderProps> = ({ children }) => {
-  // Initialize the Agora client
-  const client: RTCClient = AgoraRTC.createClient({
-    mode: 'rtc',
-    codec: 'vp8',
-  }) as RTCClient;
+  // Initialize the Agora client - use useMemo to ensure it's only created once
+  const client: RTCClient = useMemo(() => {
+    return AgoraRTC.createClient({
+      mode: 'rtc',
+      codec: 'vp8',
+    }) as RTCClient;
+  }, []); // Empty dependency array ensures it's only created once
 
-  return <AgoraContext.Provider value={{ client }}>{children}</AgoraContext.Provider>;
+  // State for avatar speaking status
+  const [isAvatarSpeaking, setIsAvatarSpeaking] = useState(false);
+
+  const handleSetIsAvatarSpeaking = useCallback((speaking: boolean) => {
+    setIsAvatarSpeaking(speaking);
+  }, []);
+
+  return (
+    <AgoraContext.Provider value={{ 
+      client, 
+      isAvatarSpeaking, 
+      setIsAvatarSpeaking: handleSetIsAvatarSpeaking 
+    }}>
+      {children}
+    </AgoraContext.Provider>
+  );
 };
 
 // Create a custom hook to use the context

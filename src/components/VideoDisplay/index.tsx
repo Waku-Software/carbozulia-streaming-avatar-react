@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ILocalVideoTrack } from 'agora-rtc-sdk-ng';
+import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
 
 interface VideoDisplayProps {
@@ -13,6 +14,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   const localVideoRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { isAvatarSpeaking } = useAgora();
 
   // State for dragging, resizing, and view switching
   const [isDragging, setIsDragging] = useState(false);
@@ -206,6 +208,18 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
             ></video>
           )}
           <video id="remote-video"></video>
+          
+          {/* Speaking indicator overlay */}
+          {isAvatarSpeaking && (
+            <div className="speaking-indicator">
+              <div className="speaking-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span className="speaking-text">Speaking...</span>
+            </div>
+          )}
         </>
       ) : (
         // When switched, show local camera in main area
