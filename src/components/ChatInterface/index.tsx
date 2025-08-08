@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RTCClient, interruptResponse } from '../../agoraHelper';
-import { useMessageState, SystemEventType, UserTriggeredEventType, Message } from '../../hooks/useMessageState';
+import {
+  useMessageState,
+  SystemEventType,
+  UserTriggeredEventType,
+  MessageSender,
+  MessageType,
+  Message,
+} from '../../hooks/useMessageState';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
 
@@ -79,7 +86,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     inputMessage,
     setInputMessage,
     sendMessage,
-    addReceivedMessage,
+    addMessage,
+    addChatMessage,
+    addSystemMessage,
     clearMessages,
     formatTime,
     shouldShowTimeSeparator,
@@ -166,35 +175,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
         if (type === 'chat') {
           const { text, from } = pld;
-          const isSentByMe = from === 'user';
-          addReceivedMessage(`${type}_${mid}`, text, isSentByMe);
+          const sender = from === 'user' ? MessageSender.USER : MessageSender.AVATAR;
+          addChatMessage(`${type}_${mid}`, text, sender);
         } else if (type === 'event') {
           const { event } = pld;
           if (event === 'audio_start') {
             setIsAvatarSpeaking(true);
             setHasAvatarStartedSpeaking(true);
             console.log('Avatar started speaking - will now show "finished speaking" messages');
-            addReceivedMessage(`event_${mid}`, '🎤 Avatar started speaking', false, true, SystemEventType.AVATAR_AUDIO_START);
+            addSystemMessage(`event_${mid}`, '🎤 Avatar started speaking', SystemEventType.AVATAR_AUDIO_START);
           } else if (event === 'audio_end') {
             setIsAvatarSpeaking(false);
             // Only show "Avatar finished speaking" message if:
             // 1. The avatar has actually started speaking in this session, AND
             // 2. There are actual chat messages in the conversation (not just system messages)
-            const hasChatMessages = messages.some((msg) => !msg.isSystemMessage);
+            const hasChatMessages = messages.some((msg) => msg.messageType === MessageType.CHAT);
             if (hasAvatarStartedSpeaking && hasChatMessages) {
-              addReceivedMessage(`event_${mid}`, '✅ Avatar finished speaking', false, true, SystemEventType.AVATAR_AUDIO_END);
+              addSystemMessage(`event_${mid}`, '✅ Avatar finished speaking', SystemEventType.AVATAR_AUDIO_END);
             } else {
               console.log('Suppressing "Avatar finished speaking" message:', {
                 hasAvatarStartedSpeaking,
                 hasChatMessages,
                 messageCount: messages.length,
-                chatMessageCount: messages.filter((msg) => !msg.isSystemMessage).length,
+                chatMessageCount: messages.filter((msg) => msg.messageType === MessageType.CHAT).length,
               });
             }
           }
           // Log any other events for debugging
           else {
-            addReceivedMessage(`event_${mid}`, `📋 Event: ${event}`, false, true);
+            addMessage(`event_${mid}`, `📋 Event: ${event}`, MessageSender.SYSTEM, MessageType.EVENT);
           }
         } else if (type === 'command') {
           // Handle command acknowledgments
@@ -204,13 +213,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             const status = code === 1000 ? '✅' : '❌';
             const statusText = code === 1000 ? 'Success' : 'Failed';
             const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT_ACK : SystemEventType.SET_PARAMS_ACK;
-            addReceivedMessage(
-              `cmd_ack_${mid}`,
-              `${status} ${cmd}: ${statusText}${msg ? ` (${msg})` : ''}`,
-              false,
-              true,
-              systemType,
-            );
+            addSystemMessage(`cmd_ack_${mid}`, `${status} ${cmd}: ${statusText}${msg ? ` (${msg})` : ''}`, systemType);
           } else {
             // This is a command being sent
             const { data } = pld;
@@ -226,7 +229,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               messageText,
             });
 
-            addReceivedMessage(`cmd_send_${mid}`, messageText, false, true, systemType, metadata);
+            addSystemMessage(`cmd_send_${mid}`, messageText, systemType, metadata);
           }
         }
       } catch (error) {
@@ -234,7 +237,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         console.error('Message body:', body);
       }
     },
-    [setIsAvatarSpeaking, addReceivedMessage, hasAvatarStartedSpeaking, messages],
+    [setIsAvatarSpeaking, addChatMessage, addSystemMessage, addMessage, hasAvatarStartedSpeaking, messages],
   );
 
   // Set up stream message listener
@@ -261,10 +264,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (onSystemMessageCallback) {
       onSystemMessageCallback((messageId, text, systemType, metadata) => {
-        addReceivedMessage(messageId, text, false, true, systemType as SystemEventType, metadata);
+        addSystemMessage(messageId, text, systemType as SystemEventType, metadata);
       });
     }
-  }, [onSystemMessageCallback, addReceivedMessage]);
+  }, [onSystemMessageCallback, addSystemMessage]);
 
   useEffect(() => {
     scrollToBottom();
@@ -288,9 +291,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       await toggleMic();
       // Add system message for user audio state change
       if (micEnabled) {
-        addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', false, true, SystemEventType.MIC_END);
+        addSystemMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', SystemEventType.MIC_END);
       } else {
-        addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', false, true, SystemEventType.MIC_START);
+        addSystemMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', SystemEventType.MIC_START);
       }
       return;
     }
@@ -298,10 +301,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     // Fallback implementation if toggleMic is not provided
     if (!micEnabled) {
       setMicEnabled(true);
-      addReceivedMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', false, true, SystemEventType.MIC_START);
+      addSystemMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', SystemEventType.MIC_START);
     } else {
       setMicEnabled(false);
-      addReceivedMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', false, true, SystemEventType.MIC_END);
+      addSystemMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', SystemEventType.MIC_END);
     }
   };
 
@@ -311,9 +314,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     try {
       // Add system message for video state change
       if (cameraEnabled) {
-        addReceivedMessage(`camera_${Date.now()}`, '📷 User camera disabled', false, true, SystemEventType.CAMERA_END);
+        addSystemMessage(`camera_${Date.now()}`, '📷 User camera disabled', SystemEventType.CAMERA_END);
       } else {
-        addReceivedMessage(`camera_${Date.now()}`, '📹 User camera enabled', false, true, SystemEventType.CAMERA_START);
+        addSystemMessage(`camera_${Date.now()}`, '📹 User camera enabled', SystemEventType.CAMERA_START);
       }
 
       // Toggle the camera
@@ -350,7 +353,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 <div className="time-separator">{formatTime(message.timestamp)}</div>
               )}
               <div
-                className={`chat-message ${message.isSentByMe ? 'sent' : 'received'} ${message.isSystemMessage ? `system ${message.systemType || ''}` : ''}`}
+                className={`chat-message ${message.sender === MessageSender.USER ? 'sent' : 'received'} ${message.messageType === MessageType.SYSTEM ? `system ${message.systemType || ''}` : ''}`}
                 onMouseEnter={(e) => handleMessageMouseEnter(e, message)}
                 onMouseLeave={handleMessageMouseLeave}
               >
@@ -401,13 +404,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <button
               onClick={() => {
                 // Add system message for interrupt
-                addReceivedMessage(
-                  `interrupt_${Date.now()}`,
-                  '🛑 User interrupted response',
-                  false,
-                  true,
-                  SystemEventType.INTERRUPT,
-                );
+                addSystemMessage(`interrupt_${Date.now()}`, '🛑 User interrupted response', SystemEventType.INTERRUPT);
                 interruptResponse(client, (cmd) => {
                   console.log(`Interrupt command sent: ${cmd}`);
                 });

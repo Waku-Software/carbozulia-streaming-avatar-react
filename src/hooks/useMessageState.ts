@@ -16,6 +16,21 @@ export enum SystemEventType {
   INTERRUPT_ACK = 'interrupt_ack',
 }
 
+// Message sender types
+export enum MessageSender {
+  USER = 'user',
+  AVATAR = 'avatar',
+  SYSTEM = 'system',
+}
+
+// Message types for better categorization
+export enum MessageType {
+  CHAT = 'chat',
+  SYSTEM = 'system',
+  EVENT = 'event',
+  COMMAND = 'command',
+}
+
 // Type for user-triggered system events
 export type UserTriggeredEventType =
   | SystemEventType.MIC_START
@@ -26,10 +41,11 @@ export type UserTriggeredEventType =
 export interface Message {
   id: string;
   text: string;
-  isSentByMe: boolean;
-  isSystemMessage?: boolean;
-  systemType?: SystemEventType;
+  sender: MessageSender;
+  messageType: MessageType;
   timestamp: number;
+  // System-specific fields
+  systemType?: SystemEventType;
   // Additional data for tooltips and other features
   metadata?: {
     fullParams?: Record<string, unknown>; // For set-params messages
@@ -49,12 +65,19 @@ interface UseMessageStateReturn {
   setInputMessage: (message: string) => void;
   sendMessage: () => Promise<void>;
   clearMessages: () => void;
-  addReceivedMessage: (
+  addMessage: (
     messageId: string,
     text: string,
-    isSentByMe?: boolean,
-    isSystemMessage?: boolean,
+    sender: MessageSender,
+    messageType: MessageType,
     systemType?: SystemEventType,
+    metadata?: Message['metadata'],
+  ) => void;
+  addChatMessage: (messageId: string, text: string, sender: MessageSender) => void;
+  addSystemMessage: (
+    messageId: string,
+    text: string,
+    systemType: SystemEventType,
     metadata?: Message['metadata'],
   ) => void;
   cleanupOldSystemMessages: () => void;
@@ -118,7 +141,8 @@ export const useMessageState = ({
     const newMessage: Message = {
       id: messageId,
       text: inputMessage,
-      isSentByMe: true,
+      sender: MessageSender.USER,
+      messageType: MessageType.CHAT,
       timestamp: Date.now(),
     };
 
@@ -136,26 +160,26 @@ export const useMessageState = ({
     }
   }, [client, connected, inputMessage, sending]);
 
-  const addReceivedMessage = useCallback(
+  const addMessage = useCallback(
     (
       messageId: string,
       text: string,
-      isSentByMe: boolean = false,
-      isSystemMessage: boolean = false,
+      sender: MessageSender,
+      messageType: MessageType,
       systemType?: SystemEventType,
       metadata?: Message['metadata'],
     ) => {
       setMessages((prev) => {
         const currentTime = Date.now();
         // For system messages, always create a new message to avoid concatenation
-        if (isSystemMessage) {
+        if (messageType === MessageType.SYSTEM) {
           return [
             ...prev,
             {
               id: `${messageId}_${currentTime}`,
               text,
-              isSentByMe,
-              isSystemMessage,
+              sender,
+              messageType,
               systemType,
               timestamp: currentTime,
               metadata,
@@ -181,9 +205,8 @@ export const useMessageState = ({
           {
             id: messageId,
             text,
-            isSentByMe,
-            isSystemMessage,
-            systemType,
+            sender,
+            messageType,
             timestamp: currentTime,
             metadata,
           },
@@ -191,6 +214,20 @@ export const useMessageState = ({
       });
     },
     [],
+  );
+
+  const addChatMessage = useCallback(
+    (messageId: string, text: string, sender: MessageSender) => {
+      addMessage(messageId, text, sender, MessageType.CHAT);
+    },
+    [addMessage],
+  );
+
+  const addSystemMessage = useCallback(
+    (messageId: string, text: string, systemType: SystemEventType, metadata?: Message['metadata']) => {
+      addMessage(messageId, text, MessageSender.SYSTEM, MessageType.SYSTEM, systemType, metadata);
+    },
+    [addMessage],
   );
 
   const clearMessages = useCallback(() => {
@@ -202,8 +239,8 @@ export const useMessageState = ({
   const cleanupOldSystemMessages = useCallback(() => {
     setMessages((prev) => {
       // Keep only the last 10 system messages and all regular messages
-      const systemMessages = prev.filter((msg) => msg.isSystemMessage);
-      const regularMessages = prev.filter((msg) => !msg.isSystemMessage);
+      const systemMessages = prev.filter((msg) => msg.messageType === MessageType.SYSTEM);
+      const regularMessages = prev.filter((msg) => msg.messageType === MessageType.CHAT);
 
       // Keep the last 10 system messages
       const recentSystemMessages = systemMessages.slice(-10);
@@ -219,7 +256,7 @@ export const useMessageState = ({
 
   // Auto-cleanup system messages when there are too many
   useEffect(() => {
-    if (messages.filter((msg) => msg.isSystemMessage).length > 15) {
+    if (messages.filter((msg) => msg.messageType === MessageType.SYSTEM).length > 15) {
       cleanupOldSystemMessages();
     }
   }, [messages, cleanupOldSystemMessages]);
@@ -230,7 +267,9 @@ export const useMessageState = ({
     setInputMessage,
     sendMessage,
     clearMessages,
-    addReceivedMessage,
+    addMessage,
+    addChatMessage,
+    addSystemMessage,
     cleanupOldSystemMessages,
     formatTime,
     shouldShowTimeSeparator,
