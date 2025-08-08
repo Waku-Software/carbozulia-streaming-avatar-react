@@ -1,11 +1,9 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { ApiService, Language, Voice, Avatar } from '../../apiService';
 import AvatarSelector from '../AvatarSelector';
 import VoiceSelector from '../VoiceSelector';
+import JsonEditorModal from '../JsonEditorModal';
 import './styles.css';
-
-// Lazy load JsonEditorModal to split Monaco Editor into a separate chunk
-const JsonEditorModal = lazy(() => import('../JsonEditorModal'));
 
 interface ConfigurationPanelProps {
   api: ApiService | null | undefined;
@@ -29,8 +27,8 @@ interface ConfigurationPanelProps {
   setBackgroundUrl: (url: string) => void;
   knowledgeId: string;
   setKnowledgeId: (id: string) => void;
-  voiceParams: Record<string, unknown>;
-  setVoiceParams: (params: Record<string, unknown>) => void;
+  voiceParams: Record<string, any>;
+  setVoiceParams: (params: Record<string, any>) => void;
   isJoined: boolean;
   startStreaming: () => Promise<void>;
   closeStreaming: () => Promise<void>;
@@ -106,7 +104,7 @@ export default function ConfigurationPanel({
     setIsJsonModalOpen(false);
   };
 
-  const handleJsonModalSave = (newParams: Record<string, unknown>) => {
+  const handleJsonModalSave = (newParams: Record<string, any>) => {
     setVoiceParams(newParams);
   };
 
@@ -271,15 +269,13 @@ export default function ConfigurationPanel({
       </div>
 
       {/* JSON Editor Modal */}
-      <Suspense fallback={<div>Loading editor...</div>}>
-        <JsonEditorModal
-          isOpen={isJsonModalOpen}
-          onClose={handleCloseJsonModal}
-          value={voiceParams}
-          onChange={handleJsonModalSave}
-          title="Voice Parameters Editor"
-        />
-      </Suspense>
+      <JsonEditorModal
+        isOpen={isJsonModalOpen}
+        onClose={handleCloseJsonModal}
+        value={voiceParams}
+        onChange={handleJsonModalSave}
+        title="Voice Parameters Editor"
+      />
     </div>
   );
 }
