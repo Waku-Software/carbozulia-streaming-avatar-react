@@ -72,8 +72,8 @@ cp .env.development .env.development.local
 Edit `.env.development.local` with your configuration:
 
 ```env
-VITE_AKOOL_API_HOST=https://openapi.akool.com
-VITE_AKOOL_API_TOKEN=your_access_token_here
+VITE_OPENAPI_HOST=https://openapi.akool.com
+VITE_OPENAPI_TOKEN=your_access_token_here
 VITE_SERVER_BASE=/streaming/avatar
 ```
 
