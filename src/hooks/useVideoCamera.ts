@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import AgoraRTC, { ILocalVideoTrack, ICameraVideoTrack } from 'agora-rtc-sdk-ng';
 
 interface UseVideoCameraReturn {
@@ -44,7 +44,6 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
       setLocalVideoTrack(cameraTrack);
       setCameraEnabled(true);
 
-      console.log('Camera enabled successfully');
     } catch (error) {
       console.error('Failed to enable camera:', error);
 
@@ -68,7 +67,9 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
   const disableCamera = useCallback(async () => {
     try {
       if (videoTrackRef.current) {
-        // For regular disable, just disable the track but keep it for reuse
+        // Stop the track first to release the device
+        videoTrackRef.current.stop();
+        // Then disable it
         await videoTrackRef.current.setEnabled(false);
       }
 
@@ -76,7 +77,6 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
       setLocalVideoTrack(null);
       setCameraError(null);
 
-      console.log('Camera disabled successfully');
     } catch (error) {
       console.error('Failed to disable camera:', error);
     }
@@ -92,14 +92,28 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
 
   // Cleanup function to properly close the track
   const cleanup = useCallback(async () => {
-    if (videoTrackRef.current) {
-      videoTrackRef.current.close();
-      videoTrackRef.current = null;
+    try {
+      if (videoTrackRef.current) {
+        // Stop the track first
+        videoTrackRef.current.stop();
+        // Close the track to release the device
+        videoTrackRef.current.close();
+        videoTrackRef.current = null;
+      }
+      setLocalVideoTrack(null);
+      setCameraEnabled(false);
+      setCameraError(null);
+    } catch (error) {
+      console.error('Failed to cleanup camera track:', error);
     }
-    setLocalVideoTrack(null);
-    setCameraEnabled(false);
-    setCameraError(null);
   }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, [cleanup]);
 
   return {
     cameraEnabled,

@@ -183,7 +183,18 @@ export const useStreaming = (
     client.removeAllListeners('token-privilege-did-expire');
 
     try {
-      // Unpublish all local tracks including video
+      // Stop and close all local tracks before unpublishing
+      const localTracks = client.localTracks;
+      for (const track of localTracks) {
+        try {
+          track.stop();
+          track.close();
+        } catch (error) {
+          console.error('Failed to stop/close local track:', error);
+        }
+      }
+
+      // Unpublish all local tracks
       await client.unpublish();
     } catch (error) {
       console.error('Failed to unpublish tracks:', error);
@@ -195,11 +206,6 @@ export const useStreaming = (
   // Custom hook for avatar parameter management
   const updateAvatarParams = useCallback(async () => {
     if (!client || !state.isJoined || !state.connected) {
-      console.log('Skipping avatar params update: client not ready', {
-        hasClient: !!client,
-        isJoined: state.isJoined,
-        connected: state.connected,
-      });
       return;
     }
 
@@ -214,8 +220,6 @@ export const useStreaming = (
 
     // Pass a callback to track command sends
     await setAvatarParams(client, metadata, (cmd, data) => {
-      console.log(`Command sent: ${cmd}`, data);
-
       // Create system message for the command being sent
       if (onSystemMessage && cmd === 'set-params' && data) {
         const messageId = `cmd_send_${Date.now()}`;
@@ -330,15 +334,32 @@ export const useStreaming = (
     await api?.closeSession(state.session._id);
   }, [api, leaveChat, leaveChannel, state.session]);
 
-  // Clean up event listeners when component unmounts
+  // Clean up event listeners and tracks when component unmounts
   useEffect(() => {
     return () => {
+      // Remove all event listeners
       client.removeAllListeners('exception');
       client.removeAllListeners('user-published');
       client.removeAllListeners('user-unpublished');
       client.removeAllListeners('token-privilege-will-expire');
       client.removeAllListeners('token-privilege-did-expire');
       client.removeAllListeners('network-quality');
+      client.removeAllListeners('stream-message');
+
+      // Stop and close all local tracks
+      try {
+        const localTracks = client.localTracks;
+        for (const track of localTracks) {
+          try {
+            track.stop();
+            track.close();
+          } catch (error) {
+            console.error('Failed to stop/close local track during cleanup:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to cleanup local tracks on unmount:', error);
+      }
     };
   }, [client]);
 

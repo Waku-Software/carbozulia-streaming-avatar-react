@@ -13,7 +13,7 @@ import { useVideoCamera } from './hooks/useVideoCamera';
 
 function App() {
   const { client } = useAgora();
-  const { micEnabled, setMicEnabled, toggleMic } = useAudioControls();
+  const { micEnabled, setMicEnabled, toggleMic, cleanup: cleanupAudio } = useAudioControls();
 
   const [modeType, setModeType] = useState(Number(import.meta.env.VITE_MODE_TYPE) || 2);
   const [language, setLanguage] = useState(import.meta.env.VITE_LANGUAGE || 'en');
@@ -42,7 +42,7 @@ function App() {
     }
   }, [openapiHost, openapiToken]);
 
-  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera, cleanup } = useVideoCamera();
+  const { cameraEnabled, localVideoTrack, cameraError, toggleCamera, cleanup: cleanupCamera } = useVideoCamera();
 
   const { isJoined, connected, remoteStats, startStreaming, closeStreaming } = useStreaming(
     avatarId,
@@ -59,12 +59,26 @@ function App() {
     systemMessageCallbackRef.current || undefined,
   );
 
-  // Auto-cleanup camera when streaming stops
+  // Auto-cleanup media devices when streaming stops
   useEffect(() => {
-    if (!connected && cameraEnabled) {
-      cleanup();
+    if (!connected) {
+      // Cleanup both audio and video when streaming stops
+      if (micEnabled) {
+        cleanupAudio();
+      }
+      if (cameraEnabled) {
+        cleanupCamera();
+      }
     }
-  }, [connected, cameraEnabled, cleanup]);
+  }, [connected, micEnabled, cameraEnabled, cleanupAudio, cleanupCamera]);
+
+  // Cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      cleanupAudio();
+      cleanupCamera();
+    };
+  }, [cleanupAudio, cleanupCamera]);
 
   return (
     <>

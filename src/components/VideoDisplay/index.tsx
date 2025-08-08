@@ -171,17 +171,28 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
       }
     }
 
-    // Cleanup when track is removed or component unmounts
+    // Cleanup when track is removed, camera is disabled, or component unmounts
     return () => {
       if (localVideoTrack) {
         try {
           localVideoTrack.stop();
         } catch (error) {
-          console.error('Failed to stop local video track:', error);
+          console.error('Failed to stop local video track in cleanup:', error);
         }
       }
     };
   }, [localVideoTrack, cameraEnabled, isViewSwitched]);
+
+  // Additional cleanup when camera is disabled
+  useEffect(() => {
+    if (!cameraEnabled && localVideoTrack) {
+      try {
+        localVideoTrack.stop();
+      } catch (error) {
+        console.error('Failed to stop video track when camera disabled:', error);
+      }
+    }
+  }, [cameraEnabled, localVideoTrack]);
 
   return (
     <div ref={containerRef} className="video-container">
