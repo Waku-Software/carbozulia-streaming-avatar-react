@@ -22,11 +22,6 @@ type AvatarConfig = {
   voiceParams: Record<string, unknown>;
 };
 
-/** Serialize voice parameters object to JSON string if not empty */
-const serializeVoiceParams = (params: Record<string, unknown>): string | undefined => {
-  return Object.keys(params).length > 0 ? JSON.stringify(params) : undefined;
-};
-
 /** Build avatar metadata object with clean, filtered values */
 const buildAvatarMetadata = (config: AvatarConfig) => {
   const metadata = {
@@ -35,7 +30,7 @@ const buildAvatarMetadata = (config: AvatarConfig) => {
     lang: config.language,
     mode: config.modeType,
     bgurl: config.backgroundUrl,
-    vparams: serializeVoiceParams(config.voiceParams),
+    vparams: config.voiceParams,
   };
 
   // Filter out falsy values to avoid sending empty parameters

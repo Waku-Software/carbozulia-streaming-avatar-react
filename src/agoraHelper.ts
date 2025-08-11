@@ -15,14 +15,14 @@ export function isClientReady(client: RTCClient): boolean {
   return client.connectionState === 'CONNECTED' && client.uid !== undefined;
 }
 
-type Metadata = {
-  vid?: string; // voiceId
-  vurl?: string; // voiceUrl
+export interface Metadata {
+  vid?: string; // voice id
+  vurl?: string; // voice url
   lang?: string; // language
-  mode?: number; // modeType
-  bgurl?: string; // backgroundUrl
-  vparams?: string; // voice params
-};
+  mode?: number; // mode
+  bgurl?: string; // background url
+  vparams?: Record<string, unknown>; // voice params
+}
 
 export type CommandPayload = {
   cmd: string;

@@ -27,8 +27,8 @@ interface ConfigurationPanelProps {
   setBackgroundUrl: (url: string) => void;
   knowledgeId: string;
   setKnowledgeId: (id: string) => void;
-  voiceParams: Record<string, any>;
-  setVoiceParams: (params: Record<string, any>) => void;
+  voiceParams: Record<string, unknown>;
+  setVoiceParams: (params: Record<string, unknown>) => void;
   isJoined: boolean;
   startStreaming: () => Promise<void>;
   closeStreaming: () => Promise<void>;
@@ -104,7 +104,7 @@ export default function ConfigurationPanel({
     setIsJsonModalOpen(false);
   };
 
-  const handleJsonModalSave = (newParams: Record<string, any>) => {
+  const handleJsonModalSave = (newParams: Record<string, unknown>) => {
     setVoiceParams(newParams);
   };
 

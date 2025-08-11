@@ -58,7 +58,7 @@ export type SessionOptions = {
   language?: string;
   mode_type?: number;
   background_url?: string;
-  voice_params?: Record<string, any>;
+  voice_params?: Record<string, unknown>;
 };
 
 export class ApiService {
@@ -111,8 +111,8 @@ export class ApiService {
     return this.fetchApi('/api/open/v3/voice/list?from=3', 'GET');
   }
 
-  public async getAvatarList(type: string = 'open'): Promise<Avatar[]> {
-    const data = await this.fetchApi(`/api/open/v4/liveAvatar/avatar/list?page=1&size=100&type=${type}`, 'GET');
+  public async getAvatarList(platform: string = 'open'): Promise<Avatar[]> {
+    const data = await this.fetchApi(`/api/open/v4/liveAvatar/avatar/list?page=1&size=100&platform=${platform}`, 'GET');
     return data?.result;
   }
 }

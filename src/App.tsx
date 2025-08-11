@@ -20,7 +20,7 @@ function App() {
   const [voiceId, setVoiceId] = useState(import.meta.env.VITE_VOICE_ID || '');
   const [backgroundUrl, setBackgroundUrl] = useState(import.meta.env.VITE_BACKGROUND_URL || '');
   const [voiceUrl, setVoiceUrl] = useState(import.meta.env.VITE_VOICE_URL || '');
-  const [voiceParams, setVoiceParams] = useState<Record<string, any>>({});
+  const [voiceParams, setVoiceParams] = useState<Record<string, unknown>>({});
 
   const [openapiHost, setOpenapiHost] = useState(import.meta.env.VITE_OPENAPI_HOST || '');
   const [avatarId, setAvatarId] = useState(import.meta.env.VITE_AVATAR_ID || '');

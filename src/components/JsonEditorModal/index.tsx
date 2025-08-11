@@ -5,8 +5,8 @@ import './styles.css';
 interface JsonEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  value: Record<string, any>;
-  onChange: (value: Record<string, any>) => void;
+  value: Record<string, unknown>;
+  onChange: (value: Record<string, unknown>) => void;
   title?: string;
 }
 
