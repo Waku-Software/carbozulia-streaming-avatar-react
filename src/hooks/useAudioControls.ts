@@ -16,7 +16,7 @@ export const useAudioControls = () => {
           ANS: true,
           AGC: true,
         });
-        
+
         await client.publish(audioTrack);
         audioTrackRef.current = audioTrack;
         setMicEnabled(true);

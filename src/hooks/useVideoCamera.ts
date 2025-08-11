@@ -43,7 +43,6 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
       videoTrackRef.current = cameraTrack;
       setLocalVideoTrack(cameraTrack);
       setCameraEnabled(true);
-
     } catch (error) {
       console.error('Failed to enable camera:', error);
 
@@ -76,7 +75,6 @@ export const useVideoCamera = (): UseVideoCameraReturn => {
       setCameraEnabled(false);
       setLocalVideoTrack(null);
       setCameraError(null);
-
     } catch (error) {
       console.error('Failed to disable camera:', error);
     }
