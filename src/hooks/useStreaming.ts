@@ -91,7 +91,7 @@ export const useStreaming = (
       log('onUserPublish', user, mediaType);
       if (mediaType === 'video') {
         const remoteTrack = await client.subscribe(user, mediaType);
-        remoteTrack.play('remote-video');
+        remoteTrack.play('remote-video', { fit: 'contain' });
       } else if (mediaType === 'audio') {
         const remoteTrack = await client.subscribe(user, mediaType);
         remoteTrack.play();
