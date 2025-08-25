@@ -25,14 +25,13 @@ export default function AvatarSelector({
   const [useManualAvatarId, setUseManualAvatarId] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(false);
-  const [avatarType, setAvatarType] = useState<'open' | 'aigc'>('open');
 
   const refreshAvatarList = async () => {
     if (!api || isRefreshing || refreshCooldown) return;
 
     setIsRefreshing(true);
     try {
-      const avatarList = await api.getAvatarList(avatarType);
+      const avatarList = await api.getAvatarList();
       setAvatars(avatarList);
 
       setRefreshCooldown(true);
@@ -53,41 +52,8 @@ export default function AvatarSelector({
     }
   };
 
-  const handleAvatarTypeChange = async (newType: 'open' | 'aigc') => {
-    setAvatarType(newType);
-    setAvatarId(''); // Reset avatar selection when type changes
-
-    if (!api || isRefreshing || refreshCooldown) return;
-
-    setIsRefreshing(true);
-    try {
-      const avatarList = await api.getAvatarList(newType);
-      setAvatars(avatarList);
-
-      setRefreshCooldown(true);
-      setTimeout(() => setRefreshCooldown(false), 5000);
-    } catch (error) {
-      console.error('Error refreshing avatar list:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-
   return (
     <div>
-      <label>
-        Avatar Type:
-        <select
-          value={avatarType}
-          onChange={(e) => handleAvatarTypeChange(e.target.value as 'open' | 'aigc')}
-          disabled={disabled}
-          className="avatar-select"
-          style={{ marginBottom: '8px' }}
-        >
-          <option value="open">Open Avatars</option>
-          <option value="aigc">AIGC Avatars</option>
-        </select>
-      </label>
       <label>
         Avatar:
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

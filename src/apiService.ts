@@ -111,8 +111,8 @@ export class ApiService {
     return this.fetchApi('/api/open/v3/voice/list?from=3', 'GET');
   }
 
-  public async getAvatarList(platform: string = 'open'): Promise<Avatar[]> {
-    const data = await this.fetchApi(`/api/open/v4/liveAvatar/avatar/list?page=1&size=100&platform=${platform}`, 'GET');
+  public async getAvatarList(): Promise<Avatar[]> {
+    const data = await this.fetchApi(`/api/open/v4/liveAvatar/avatar/list?page=1&size=100`, 'GET');
     return data?.result;
   }
 }
