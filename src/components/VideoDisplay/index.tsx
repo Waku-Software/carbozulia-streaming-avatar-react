@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
+import { log } from '../../agoraHelper';
 
 interface VideoDisplayProps {
   isJoined: boolean;
@@ -23,6 +24,9 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [justFinishedOperation, setJustFinishedOperation] = useState(false);
+
+  // State for remote video playing status
+  const [isRemoteVideoPlaying, setIsRemoteVideoPlaying] = useState(false);
 
   const isImageUrl = (url: string) => {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
@@ -194,6 +198,46 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
     }
   }, [cameraEnabled, localVideoTrack]);
 
+  // Monitor remote video playing state
+  useEffect(() => {
+    const remoteVideo = document.getElementById('remote-video') as HTMLVideoElement;
+    if (!remoteVideo) return;
+
+    const checkVideoReady = () => {
+      // Only show remote video if it's playing AND has loaded displayable data
+      const isReady = !remoteVideo.paused && remoteVideo.readyState >= 2;
+      setIsRemoteVideoPlaying(isReady);
+      if (isReady) {
+        log('remote video is ready');
+      }
+    };
+
+    const handleStop = () => setIsRemoteVideoPlaying(false);
+
+    // Check when video can start playing with data
+    remoteVideo.addEventListener('canplay', checkVideoReady);
+    remoteVideo.addEventListener('playing', checkVideoReady);
+    remoteVideo.addEventListener('pause', handleStop);
+    remoteVideo.addEventListener('ended', handleStop);
+    remoteVideo.addEventListener('loadstart', handleStop);
+
+    return () => {
+      remoteVideo.removeEventListener('canplay', checkVideoReady);
+      remoteVideo.removeEventListener('playing', checkVideoReady);
+      remoteVideo.removeEventListener('pause', handleStop);
+      remoteVideo.removeEventListener('ended', handleStop);
+      remoteVideo.removeEventListener('loadstart', handleStop);
+    };
+  }, [isJoined]);
+
+  // Reset remote video state when stream disconnects
+  useEffect(() => {
+    if (!isJoined) {
+      setIsRemoteVideoPlaying(false);
+      log('Stream disconnected, switching back to local video');
+    }
+  }, [isJoined]);
+
   return (
     <div ref={containerRef} className="video-container">
       {/* Main video area - shows avatar or local camera based on switch state */}
@@ -202,7 +246,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
           {isImageUrl(avatarVideoUrl) ? (
             <img
               id="placeholder-image"
-              hidden={isJoined}
+              hidden={isRemoteVideoPlaying}
               src={avatarVideoUrl}
               alt="Avatar placeholder"
               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
@@ -210,7 +254,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
           ) : (
             <video
               id="placeholder-video"
-              hidden={isJoined}
+              hidden={isRemoteVideoPlaying}
               src={avatarVideoUrl}
               loop
               muted
@@ -218,7 +262,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
               autoPlay
             ></video>
           )}
-          <video id="remote-video"></video>
+          <video id="remote-video" style={{ display: isRemoteVideoPlaying ? 'block' : 'none' }}></video>
 
           {/* Speaking indicator overlay */}
           {isAvatarSpeaking && (
@@ -288,7 +332,14 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
                 )}
                 <div
                   id="remote-video-overlay"
-                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
+                    display: isRemoteVideoPlaying ? 'block' : 'none',
+                  }}
                 ></div>
               </>
             )}
