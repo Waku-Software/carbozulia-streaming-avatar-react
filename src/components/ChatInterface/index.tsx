@@ -20,6 +20,10 @@ interface ChatInterfaceProps {
   cameraEnabled: boolean;
   toggleCamera: () => Promise<void>;
   cameraError?: string | null;
+  noiseReductionEnabled: boolean;
+  toggleNoiseReduction: () => Promise<void>;
+  isDumping: boolean;
+  dumpAudio: () => Promise<void>;
   onSystemEvent?: (type: UserTriggeredEventType, message: string) => void;
   onSystemMessageCallback?: (
     callback: (messageId: string, text: string, systemType: string, metadata?: Record<string, unknown>) => void,
@@ -35,6 +39,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   cameraEnabled,
   toggleCamera,
   cameraError,
+  noiseReductionEnabled,
+  toggleNoiseReduction,
+  isDumping,
+  dumpAudio,
   onSystemMessageCallback,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -373,6 +381,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           title={micEnabled ? 'Disable microphone' : 'Enable microphone'}
         >
           <span className="material-icons">{micEnabled ? 'mic' : 'mic_off'}</span>
+        </button>
+        <button
+          onClick={toggleNoiseReduction}
+          disabled={!connected || !micEnabled}
+          className={`icon-button noise-reduction ${!connected || !micEnabled ? 'disabled' : ''} ${noiseReductionEnabled ? 'active' : ''}`}
+          title={
+            !micEnabled
+              ? 'Enable microphone first to use noise reduction'
+              : noiseReductionEnabled
+                ? 'Disable noise reduction'
+                : 'Enable noise reduction'
+          }
+        >
+          <span className="material-icons">{noiseReductionEnabled ? 'noise_control_off' : 'noise_aware'}</span>
+        </button>
+        <button
+          onClick={dumpAudio}
+          disabled={!connected || !micEnabled || isDumping}
+          className={`icon-button audio-dump ${!connected || !micEnabled || isDumping ? 'disabled' : ''} ${isDumping ? 'dumping' : ''}`}
+          title={isDumping ? 'Dumping audio data...' : 'Dump audio data for analysis (downloads 9 files)'}
+        >
+          <span className="material-icons">{isDumping ? 'download' : 'file_download'}</span>
         </button>
         <button
           onClick={toggleCameraInternal}

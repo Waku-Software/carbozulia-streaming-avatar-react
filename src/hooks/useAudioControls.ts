@@ -1,11 +1,20 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import AgoraRTC, { IMicrophoneAudioTrack } from 'agora-rtc-sdk-ng';
 import { useAgora } from '../contexts/AgoraContext';
+import { useNoiseReduction } from './useNoiseReduction';
 
 export const useAudioControls = () => {
   const { client } = useAgora();
   const [micEnabled, setMicEnabled] = useState(false);
   const audioTrackRef = useRef<IMicrophoneAudioTrack | null>(null);
+  const {
+    noiseReductionEnabled,
+    isDumping,
+    applyNoiseReduction,
+    toggleNoiseReduction,
+    dumpAudio,
+    cleanup: cleanupNoiseReduction,
+  } = useNoiseReduction();
 
   const toggleMic = useCallback(async () => {
     if (!micEnabled) {
@@ -13,9 +22,12 @@ export const useAudioControls = () => {
         const audioTrack = await AgoraRTC.createMicrophoneAudioTrack({
           encoderConfig: 'speech_low_quality',
           AEC: true,
-          ANS: true,
+          ANS: false, // Disable browser ANS since we're using AI Denoiser
           AGC: true,
         });
+
+        // Apply noise reduction to the audio track
+        await applyNoiseReduction(audioTrack);
 
         await client.publish(audioTrack);
         audioTrackRef.current = audioTrack;
@@ -37,7 +49,7 @@ export const useAudioControls = () => {
         console.error('Failed to disable microphone:', error);
       }
     }
-  }, [micEnabled, client]);
+  }, [micEnabled, client, applyNoiseReduction]);
 
   // Cleanup function to properly release the audio track
   const cleanup = useCallback(async () => {
@@ -48,11 +60,13 @@ export const useAudioControls = () => {
         await client.unpublish(audioTrackRef.current);
         audioTrackRef.current = null;
       }
+      // Cleanup noise reduction processor
+      await cleanupNoiseReduction();
       setMicEnabled(false);
     } catch (error) {
       console.error('Failed to cleanup audio track:', error);
     }
-  }, [client]);
+  }, [client, cleanupNoiseReduction]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -66,5 +80,9 @@ export const useAudioControls = () => {
     setMicEnabled,
     toggleMic,
     cleanup,
+    noiseReductionEnabled,
+    toggleNoiseReduction,
+    isDumping,
+    dumpAudio,
   };
 };

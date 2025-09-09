@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "agora-extension-ai-denoiser": "^1.1.0",
     "agora-rtc-sdk-ng": "latest",
     "chart.js": "^4.4.7",
     "react": "^18.2.0",
