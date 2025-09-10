@@ -128,3 +128,8 @@ package-lock.json
 .DS_Store
 deploy.sh
 
+.cursor/
+.serena/
+docs/
+AGENTS.md
+test.diff
