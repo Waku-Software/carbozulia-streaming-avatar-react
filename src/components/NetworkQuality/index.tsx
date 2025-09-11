@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NetworkQuality, RemoteVideoTrackStats, RemoteAudioTrackStats } from 'agora-rtc-sdk-ng';
 import { Line } from 'react-chartjs-2';
 import {
@@ -34,7 +34,7 @@ interface LatencyDataPoint {
   index: number;
 }
 
-const NetworkQualityDisplay = ({ stats }: NetworkQualityProps) => {
+const NetworkQualityDisplay: React.FC<NetworkQualityProps> = ({ stats }) => {
   const TIME_WINDOW = 120;
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);

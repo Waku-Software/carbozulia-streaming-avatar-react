@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { ApiService } from './apiService';
 
@@ -11,9 +11,18 @@ import { useAudioControls } from './hooks/useAudioControls';
 import { useStreaming } from './hooks/useStreaming';
 import { useVideoCamera } from './hooks/useVideoCamera';
 
-function App() {
+const App: React.FC = () => {
   const { client } = useAgora();
-  const { micEnabled, setMicEnabled, toggleMic, cleanup: cleanupAudio } = useAudioControls();
+  const {
+    micEnabled,
+    setMicEnabled,
+    toggleMic,
+    cleanup: cleanupAudio,
+    noiseReductionEnabled,
+    toggleNoiseReduction,
+    isDumping,
+    dumpAudio,
+  } = useAudioControls();
 
   const [modeType, setModeType] = useState(Number(import.meta.env.VITE_MODE_TYPE) || 2);
   const [language, setLanguage] = useState(import.meta.env.VITE_LANGUAGE || 'en');
@@ -127,6 +136,10 @@ function App() {
           cameraEnabled={cameraEnabled}
           toggleCamera={toggleCamera}
           cameraError={cameraError}
+          noiseReductionEnabled={noiseReductionEnabled}
+          toggleNoiseReduction={toggleNoiseReduction}
+          isDumping={isDumping}
+          dumpAudio={dumpAudio}
           onSystemMessageCallback={(callback) => {
             systemMessageCallbackRef.current = callback;
           }}
@@ -135,6 +148,6 @@ function App() {
       </div>
     </>
   );
-}
+};
 
 export default App;

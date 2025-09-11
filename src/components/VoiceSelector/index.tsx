@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Voice } from '../../apiService';
 import './styles.css';
 
@@ -10,7 +10,7 @@ interface VoiceSelectorProps {
   setVoiceUrl: (url: string) => void;
 }
 
-export default function VoiceSelector({ voiceId, setVoiceId, voices, voiceUrl, setVoiceUrl }: VoiceSelectorProps) {
+const VoiceSelector: React.FC<VoiceSelectorProps> = ({ voiceId, setVoiceId, voices, voiceUrl, setVoiceUrl }) => {
   const [useManualVoiceId, setUseManualVoiceId] = useState(false);
   const [voiceUrlInput, setVoiceUrlInput] = useState(voiceUrl);
   const [voiceIdInput, setVoiceIdInput] = useState(voiceId);
@@ -73,4 +73,6 @@ export default function VoiceSelector({ voiceId, setVoiceId, voices, voiceUrl, s
       </div>
     </div>
   );
-}
+};
+
+export default VoiceSelector;

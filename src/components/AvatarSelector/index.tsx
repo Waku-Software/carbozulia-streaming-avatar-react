@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Avatar, ApiService } from '../../apiService';
 import { log } from '../../agoraHelper';
 import './styles.css';
@@ -13,7 +13,7 @@ interface AvatarSelectorProps {
   disabled?: boolean;
 }
 
-export default function AvatarSelector({
+const AvatarSelector: React.FC<AvatarSelectorProps> = ({
   api,
   avatarId,
   setAvatarId,
@@ -21,7 +21,7 @@ export default function AvatarSelector({
   setAvatars,
   setAvatarVideoUrl,
   disabled = false,
-}: AvatarSelectorProps) {
+}) => {
   const [useManualAvatarId, setUseManualAvatarId] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshCooldown, setRefreshCooldown] = useState(false);
@@ -122,4 +122,6 @@ export default function AvatarSelector({
       </label>
     </div>
   );
-}
+};
+
+export default AvatarSelector;
