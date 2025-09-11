@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ApiService, Language, Voice, Avatar } from '../../apiService';
 import AvatarSelector from '../AvatarSelector';
 import VoiceSelector from '../VoiceSelector';
@@ -35,7 +35,7 @@ interface ConfigurationPanelProps {
   setAvatarVideoUrl: (url: string) => void;
 }
 
-export default function ConfigurationPanel({
+const ConfigurationPanel: React.FC<ConfigurationPanelProps> = ({
   api,
   openapiHost,
   setOpenapiHost,
@@ -63,7 +63,7 @@ export default function ConfigurationPanel({
   startStreaming,
   closeStreaming,
   setAvatarVideoUrl,
-}: ConfigurationPanelProps) {
+}) => {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [voices, setVoices] = useState<Voice[]>([]);
   const [avatars, setAvatars] = useState<Avatar[]>([]);
@@ -272,4 +272,6 @@ export default function ConfigurationPanel({
       />
     </div>
   );
-}
+};
+
+export default ConfigurationPanel;

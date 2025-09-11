@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { ApiService } from './apiService';
 
@@ -11,7 +11,7 @@ import { useAudioControls } from './hooks/useAudioControls';
 import { useStreaming } from './hooks/useStreaming';
 import { useVideoCamera } from './hooks/useVideoCamera';
 
-function App() {
+const App: React.FC = () => {
   const { client } = useAgora();
   const {
     micEnabled,
@@ -148,6 +148,6 @@ function App() {
       </div>
     </>
   );
-}
+};
 
 export default App;
