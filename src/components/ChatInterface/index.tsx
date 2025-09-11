@@ -45,6 +45,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   dumpAudio,
   onSystemMessageCallback,
 }) => {
+  // Check if debug features should be shown (default: false)
+  const showDebugFeatures = import.meta.env.VITE_DEBUG_FEATURES === 'true';
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { setIsAvatarSpeaking } = useAgora();
   const [hasAvatarStartedSpeaking, setHasAvatarStartedSpeaking] = useState(false);
@@ -382,28 +384,32 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         >
           <span className="material-icons">{micEnabled ? 'mic' : 'mic_off'}</span>
         </button>
-        <button
-          onClick={toggleNoiseReduction}
-          disabled={!connected || !micEnabled}
-          className={`icon-button noise-reduction ${!connected || !micEnabled ? 'disabled' : ''} ${noiseReductionEnabled ? 'active' : ''}`}
-          title={
-            !micEnabled
-              ? 'Enable microphone first to use noise reduction'
-              : noiseReductionEnabled
-                ? 'Disable noise reduction'
-                : 'Enable noise reduction'
-          }
-        >
-          <span className="material-icons">{noiseReductionEnabled ? 'noise_control_off' : 'noise_aware'}</span>
-        </button>
-        <button
-          onClick={dumpAudio}
-          disabled={!connected || !micEnabled || isDumping}
-          className={`icon-button audio-dump ${!connected || !micEnabled || isDumping ? 'disabled' : ''} ${isDumping ? 'dumping' : ''}`}
-          title={isDumping ? 'Dumping audio data...' : 'Dump audio data for analysis (downloads 9 files)'}
-        >
-          <span className="material-icons">{isDumping ? 'download' : 'file_download'}</span>
-        </button>
+        {showDebugFeatures && (
+          <button
+            onClick={toggleNoiseReduction}
+            disabled={!connected || !micEnabled}
+            className={`icon-button noise-reduction ${!connected || !micEnabled ? 'disabled' : ''} ${noiseReductionEnabled ? 'active' : ''}`}
+            title={
+              !micEnabled
+                ? 'Enable microphone first to use noise reduction'
+                : noiseReductionEnabled
+                  ? 'Disable noise reduction'
+                  : 'Enable noise reduction'
+            }
+          >
+            <span className="material-icons">{noiseReductionEnabled ? 'noise_control_off' : 'noise_aware'}</span>
+          </button>
+        )}
+        {showDebugFeatures && (
+          <button
+            onClick={dumpAudio}
+            disabled={!connected || !micEnabled || isDumping}
+            className={`icon-button audio-dump ${!connected || !micEnabled || isDumping ? 'disabled' : ''} ${isDumping ? 'dumping' : ''}`}
+            title={isDumping ? 'Dumping audio data...' : 'Dump audio data for analysis (downloads 9 files)'}
+          >
+            <span className="material-icons">{isDumping ? 'download' : 'file_download'}</span>
+          </button>
+        )}
         <button
           onClick={toggleCameraInternal}
           disabled={!connected}

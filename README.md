@@ -75,6 +75,9 @@ Edit `.env.development.local` with your configuration:
 VITE_OPENAPI_HOST=https://openapi.akool.com
 VITE_OPENAPI_TOKEN=your_access_token_here
 VITE_SERVER_BASE=/streaming/avatar
+
+# Optional: Enable debug features (noise reduction and audio dump buttons)
+# VITE_DEBUG_FEATURES=true
 ```
 
 **Note:** Replace `your_access_token_here` with the token obtained from the `/api/open/v3/getToken` endpoint.
@@ -96,6 +99,7 @@ The application will be available at `http://localhost:5173/streaming/avatar`
 | `VITE_OPENAPI_HOST` | Akool API base URL | `https://openapi.akool.com` | Yes |
 | `VITE_OPENAPI_TOKEN` | Your Akool API authentication token | - | Yes |
 | `VITE_SERVER_BASE` | Server base URL | `/streaming/avatar` | Yes |
+| `VITE_DEBUG_FEATURES` | Enable debug buttons (noise reduction & audio dump) | `undefined` (disabled) | No |
 
 ### Application Settings
 
