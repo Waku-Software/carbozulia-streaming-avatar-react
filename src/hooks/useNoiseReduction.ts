@@ -10,7 +10,8 @@ const aiDenoiser = new AIDenoiserExtension({
 AgoraRTC.registerExtensions([aiDenoiser]);
 
 export const useNoiseReduction = () => {
-  const [noiseReductionEnabled, setNoiseReductionEnabled] = useState(true); // Default on as requested
+  // Read noise reduction setting from environment variable
+  const noiseReductionEnabled = import.meta.env.VITE_NOISE_REDUCTION === 'true';
   const [isInitialized, setIsInitialized] = useState(false);
   const [isDumping, setIsDumping] = useState(false);
   const processorRef = useRef<IAIDenoiserProcessor | null>(null);
@@ -90,28 +91,6 @@ export const useNoiseReduction = () => {
     [initializeProcessor, noiseReductionEnabled],
   );
 
-  // Toggle noise reduction on/off
-  const toggleNoiseReduction = useCallback(async () => {
-    if (!processorRef.current) {
-      console.warn('Noise reduction processor not initialized - please enable microphone first');
-      return;
-    }
-
-    try {
-      const newState = !noiseReductionEnabled;
-
-      if (newState) {
-        await processorRef.current.enable();
-      } else {
-        await processorRef.current.disable();
-      }
-
-      setNoiseReductionEnabled(newState);
-    } catch (error) {
-      console.error('Failed to toggle noise reduction:', error);
-    }
-  }, [noiseReductionEnabled]);
-
   // Dump audio data for analysis
   const dumpAudio = useCallback(async () => {
     if (!processorRef.current || !isInitialized) {
@@ -161,7 +140,6 @@ export const useNoiseReduction = () => {
     isInitialized,
     isDumping,
     applyNoiseReduction,
-    toggleNoiseReduction,
     dumpAudio,
     cleanup,
   };

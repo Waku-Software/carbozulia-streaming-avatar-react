@@ -11,7 +11,6 @@ export const useAudioControls = () => {
     noiseReductionEnabled,
     isDumping,
     applyNoiseReduction,
-    toggleNoiseReduction,
     dumpAudio,
     cleanup: cleanupNoiseReduction,
   } = useNoiseReduction();
@@ -81,7 +80,6 @@ export const useAudioControls = () => {
     toggleMic,
     cleanup,
     noiseReductionEnabled,
-    toggleNoiseReduction,
     isDumping,
     dumpAudio,
   };

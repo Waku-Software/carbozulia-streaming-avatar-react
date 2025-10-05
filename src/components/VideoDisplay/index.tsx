@@ -9,9 +9,18 @@ interface VideoDisplayProps {
   avatarVideoUrl: string;
   localVideoTrack: ILocalVideoTrack | null;
   cameraEnabled: boolean;
+  startStreaming: () => Promise<void>;
+  closeStreaming: () => Promise<void>;
 }
 
-const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, localVideoTrack, cameraEnabled }) => {
+const VideoDisplay: React.FC<VideoDisplayProps> = ({
+  isJoined,
+  avatarVideoUrl,
+  localVideoTrack,
+  cameraEnabled,
+  startStreaming,
+  closeStreaming,
+}) => {
   const localVideoRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -28,8 +37,30 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
   // State for remote video playing status
   const [isRemoteVideoPlaying, setIsRemoteVideoPlaying] = useState(false);
 
+  // State for button loading
+  const [isStarting, setIsStarting] = useState(false);
+
   const isImageUrl = (url: string) => {
     return /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+  };
+
+  const handleStartStreaming = async () => {
+    setIsStarting(true);
+    try {
+      await startStreaming();
+    } catch (error) {
+      console.error('Error starting streaming:', error);
+    } finally {
+      setIsStarting(false);
+    }
+  };
+
+  const handleCloseStreaming = async () => {
+    try {
+      await closeStreaming();
+    } catch (error) {
+      console.error('Error closing streaming:', error);
+    }
   };
 
   // Drag handlers
@@ -240,6 +271,33 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({ isJoined, avatarVideoUrl, l
 
   return (
     <div ref={containerRef} className="video-container">
+      {/* Branding Logos */}
+      <div className="branding-overlay">
+        <img
+          src="https://waku-public-2.s3.us-east-1.amazonaws.com/logo_carbozulia.png"
+          alt="Carbozulia Logo"
+          className="brand-logo carbozulia-logo"
+        />
+        <img
+          src="https://waku-public-2.s3.us-east-1.amazonaws.com/waku-logo.png"
+          alt="Waku Logo"
+          className="brand-logo waku-logo"
+        />
+      </div>
+
+      {/* Start/Stop Streaming Button Overlay */}
+      <div className="streaming-control-overlay">
+        {!isJoined ? (
+          <button className="start-streaming-button" onClick={handleStartStreaming} disabled={isStarting}>
+            {isStarting ? 'Conectando...' : 'Hablar con Cheito'}
+          </button>
+        ) : (
+          <button className="stop-streaming-button" onClick={handleCloseStreaming}>
+            Terminar Conversación
+          </button>
+        )}
+      </div>
+
       {/* Main video area - shows avatar or local camera based on switch state */}
       {!isViewSwitched ? (
         <>

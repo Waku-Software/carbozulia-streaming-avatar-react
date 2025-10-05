@@ -13,18 +13,10 @@ import { useVideoCamera } from './hooks/useVideoCamera';
 
 const App: React.FC = () => {
   const { client } = useAgora();
-  const {
-    micEnabled,
-    setMicEnabled,
-    toggleMic,
-    cleanup: cleanupAudio,
-    noiseReductionEnabled,
-    toggleNoiseReduction,
-    isDumping,
-    dumpAudio,
-  } = useAudioControls();
+  const { micEnabled, setMicEnabled, toggleMic, cleanup: cleanupAudio } = useAudioControls();
 
-  const [modeType, setModeType] = useState(Number(import.meta.env.VITE_MODE_TYPE) || 2);
+  // Hardcoded for production: modeType is always "dialogue" (2)
+  const [modeType, setModeType] = useState(2);
   const [language, setLanguage] = useState(import.meta.env.VITE_LANGUAGE || 'en');
   const [voiceId, setVoiceId] = useState(import.meta.env.VITE_VOICE_ID || '');
   const [backgroundUrl, setBackgroundUrl] = useState(import.meta.env.VITE_BACKGROUND_URL || '');
@@ -33,11 +25,11 @@ const App: React.FC = () => {
 
   const [openapiHost, setOpenapiHost] = useState(import.meta.env.VITE_OPENAPI_HOST || '');
   const [avatarId, setAvatarId] = useState(import.meta.env.VITE_AVATAR_ID || '');
-  const [knowledgeId, setKnowledgeId] = useState('');
+  const [knowledgeId, setKnowledgeId] = useState(import.meta.env.VITE_KNOWLEDGE_ID || '');
   const [avatarVideoUrl, setAvatarVideoUrl] = useState(import.meta.env.VITE_AVATAR_VIDEO_URL || '');
 
   const [openapiToken, setOpenapiToken] = useState(import.meta.env.VITE_OPENAPI_TOKEN || '');
-  const [sessionDuration, setSessionDuration] = useState(10);
+  const [sessionDuration, setSessionDuration] = useState(Number(import.meta.env.VITE_SESSION_DURATION) || 10);
   const [api, setApi] = useState<ApiService | null>(null);
 
   // Ref to store the system message callback
@@ -91,7 +83,7 @@ const App: React.FC = () => {
 
   return (
     <>
-      <ConfigurationPanel
+      {/* <ConfigurationPanel
         openapiHost={openapiHost}
         setOpenapiHost={setOpenapiHost}
         openapiToken={openapiToken}
@@ -119,13 +111,15 @@ const App: React.FC = () => {
         closeStreaming={closeStreaming}
         api={api}
         setAvatarVideoUrl={setAvatarVideoUrl}
-      />
+      /> */}
       <div className="right-side">
         <VideoDisplay
           isJoined={isJoined}
           avatarVideoUrl={avatarVideoUrl}
           localVideoTrack={localVideoTrack}
           cameraEnabled={cameraEnabled}
+          startStreaming={startStreaming}
+          closeStreaming={closeStreaming}
         />
         <ChatInterface
           client={client}
@@ -133,13 +127,6 @@ const App: React.FC = () => {
           micEnabled={micEnabled}
           setMicEnabled={setMicEnabled}
           toggleMic={toggleMic}
-          cameraEnabled={cameraEnabled}
-          toggleCamera={toggleCamera}
-          cameraError={cameraError}
-          noiseReductionEnabled={noiseReductionEnabled}
-          toggleNoiseReduction={toggleNoiseReduction}
-          isDumping={isDumping}
-          dumpAudio={dumpAudio}
           onSystemMessageCallback={(callback) => {
             systemMessageCallbackRef.current = callback;
           }}

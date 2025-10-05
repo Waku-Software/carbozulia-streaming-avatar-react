@@ -215,11 +215,9 @@ export const useStreaming = (
 
     // Pass a callback to track command sends
     await setAvatarParams(client, metadata, (cmd, data) => {
-      // Create system message for the command being sent
-      if (onSystemMessage && cmd === 'set-params' && data) {
-        const messageId = `cmd_send_${Date.now()}`;
-        const messageText = `📤 ${cmd}`;
-        onSystemMessage(messageId, messageText, 'set_params', { fullParams: data });
+      // Log set-params command to console only
+      if (cmd === 'set-params' && data) {
+        console.log('📤 set-params command sent:', data);
       }
     });
   }, [

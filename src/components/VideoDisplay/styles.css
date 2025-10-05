@@ -8,6 +8,135 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Branding Overlay */
+.branding-overlay {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.brand-logo {
+  max-height: 70px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+  opacity: 0.95;
+  transition: opacity 0.3s ease;
+}
+
+.carbozulia-logo {
+  max-width: 220px;
+}
+
+.waku-logo {
+  max-width: 100px;
+}
+
+/* Fade logos slightly when hovering over video */
+.video-container:hover .brand-logo {
+  opacity: 0.7;
+}
+
+/* Responsive logo sizing */
+@media (max-width: 768px) {
+  .brand-logo {
+    max-height: 50px;
+  }
+
+  .carbozulia-logo {
+    max-width: 160px;
+  }
+
+  .waku-logo {
+    max-width: 80px;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-logo {
+    max-height: 40px;
+  }
+
+  .carbozulia-logo {
+    max-width: 130px;
+  }
+
+  .waku-logo {
+    max-width: 60px;
+  }
+
+  .branding-overlay {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+}
+
+/* Streaming Control Overlay */
+.streaming-control-overlay {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  display: flex;
+  gap: 12px;
+}
+
+.start-streaming-button,
+.stop-streaming-button {
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.start-streaming-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.start-streaming-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.start-streaming-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.start-streaming-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.stop-streaming-button {
+  background: rgba(244, 67, 54, 0.9);
+  color: white;
+}
+
+.stop-streaming-button:hover {
+  background: rgba(211, 47, 47, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+}
+
+.stop-streaming-button:active {
+  transform: translateY(0);
+}
+
 #placeholder-video,
 #remote-video,
 #placeholder-image {

@@ -1,10 +1,12 @@
 /* Main layout */
 #root {
   display: flex;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
   padding: 20px;
   gap: 24px;
-  background: #f5f7fa;
+  background: #18191a;
 }
 
 /* Right side content */
@@ -28,15 +30,15 @@
   height: 40px;
   border: none;
   border-radius: 8px;
-  background: #f0f2f5;
-  color: #666;
+  background: #3a3b3c;
+  color: #b0b3b8;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .icon-button:hover {
-  background: #e6e8eb;
-  color: #1a1a1a;
+  background: #4e4f50;
+  color: #e4e6eb;
 }
 
 .icon-button.disabled {
@@ -68,9 +70,9 @@
 
 .icon-button {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid #3a3b3c;
   border-radius: 4px;
-  background: white;
+  background: #242526;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -79,11 +81,11 @@
 }
 
 .icon-button:hover:not(:disabled) {
-  background: #f0f0f0;
+  background: #3a3b3c;
 }
 
 .icon-button:active:not(:disabled) {
-  background: #e0e0e0;
+  background: #4e4f50;
 }
 
 /* Scrollbar styling */
@@ -92,17 +94,17 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #242526;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: #4e4f50;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: #606162;
 }
 
 /* Responsive design */

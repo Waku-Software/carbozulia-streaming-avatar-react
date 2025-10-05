@@ -6,7 +6,6 @@ import {
   UserTriggeredEventType,
   MessageSender,
   MessageType,
-  Message,
 } from '../../hooks/useMessageState';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
@@ -17,13 +16,6 @@ interface ChatInterfaceProps {
   micEnabled: boolean;
   setMicEnabled: (enabled: boolean) => void;
   toggleMic?: () => Promise<void>;
-  cameraEnabled: boolean;
-  toggleCamera: () => Promise<void>;
-  cameraError?: string | null;
-  noiseReductionEnabled: boolean;
-  toggleNoiseReduction: () => Promise<void>;
-  isDumping: boolean;
-  dumpAudio: () => Promise<void>;
   onSystemEvent?: (type: UserTriggeredEventType, message: string) => void;
   onSystemMessageCallback?: (
     callback: (messageId: string, text: string, systemType: string, metadata?: Record<string, unknown>) => void,
@@ -36,20 +28,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   micEnabled,
   setMicEnabled,
   toggleMic,
-  cameraEnabled,
-  toggleCamera,
-  cameraError,
-  noiseReductionEnabled,
-  toggleNoiseReduction,
-  isDumping,
-  dumpAudio,
   onSystemMessageCallback,
 }) => {
-  // Check if debug features should be shown (default: false)
-  const showDebugFeatures = import.meta.env.VITE_DEBUG_FEATURES === 'true';
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { setIsAvatarSpeaking } = useAgora();
-  const [hasAvatarStartedSpeaking, setHasAvatarStartedSpeaking] = useState(false);
 
   // Add state for resizable height
   const [chatHeight, setChatHeight] = useState(400);
@@ -57,46 +39,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
 
-  // Tooltip state
-  const [tooltipContent, setTooltipContent] = useState<string>('');
-  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  // Tooltip component
-  const Tooltip = ({
-    content,
-    position,
-    visible,
-  }: {
-    content: string;
-    position: { x: number; y: number };
-    visible: boolean;
-  }) => {
-    if (!visible || !content) return null;
-
-    return (
-      <div
-        className="tooltip"
-        style={{
-          position: 'fixed',
-          left: position.x + 10,
-          top: position.y - 10,
-          zIndex: 9999,
-        }}
-      >
-        <div className="tooltip-content">
-          <pre>{content}</pre>
-        </div>
-      </div>
-    );
-  };
-
   const {
     messages,
     inputMessage,
     setInputMessage,
     sendMessage,
-    addMessage,
     addChatMessage,
     addSystemMessage,
     clearMessages,
@@ -159,21 +106,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     return () => window.removeEventListener('resize', handleWindowResize);
   }, [chatHeight]);
 
-  // Tooltip event handlers
-  const handleMessageMouseEnter = useCallback((e: React.MouseEvent, message: Message) => {
-    if (message.systemType === SystemEventType.SET_PARAMS && message.metadata?.fullParams) {
-      console.log('Showing tooltip for set-params message:', message.metadata.fullParams);
-      const paramsStr = JSON.stringify(message.metadata.fullParams, null, 2);
-      setTooltipContent(paramsStr);
-      setTooltipPosition({ x: e.clientX, y: e.clientY });
-      setShowTooltip(true);
-    }
-  }, []);
-
-  const handleMessageMouseLeave = useCallback(() => {
-    setShowTooltip(false);
-  }, []);
-
   const handleStreamMessage = useCallback(
     (_: number, body: Uint8Array) => {
       try {
@@ -191,29 +123,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           const { event } = pld;
           if (event === 'audio_start') {
             setIsAvatarSpeaking(true);
-            setHasAvatarStartedSpeaking(true);
-            console.log('Avatar started speaking - will now show "finished speaking" messages');
-            addSystemMessage(`event_${mid}`, '🎤 Avatar started speaking', SystemEventType.AVATAR_AUDIO_START);
+            console.log('🎤 Avatar started speaking');
           } else if (event === 'audio_end') {
             setIsAvatarSpeaking(false);
-            // Only show "Avatar finished speaking" message if:
-            // 1. The avatar has actually started speaking in this session, AND
-            // 2. There are actual chat messages in the conversation (not just system messages)
-            const hasChatMessages = messages.some((msg) => msg.messageType === MessageType.CHAT);
-            if (hasAvatarStartedSpeaking && hasChatMessages) {
-              addSystemMessage(`event_${mid}`, '✅ Avatar finished speaking', SystemEventType.AVATAR_AUDIO_END);
-            } else {
-              console.log('Suppressing "Avatar finished speaking" message:', {
-                hasAvatarStartedSpeaking,
-                hasChatMessages,
-                messageCount: messages.length,
-                chatMessageCount: messages.filter((msg) => msg.messageType === MessageType.CHAT).length,
-              });
-            }
+            console.log('✅ Avatar finished speaking');
           }
           // Log any other events for debugging
           else {
-            addMessage(`event_${mid}`, `📋 Event: ${event}`, MessageSender.SYSTEM, MessageType.EVENT);
+            console.log(`📋 Event: ${event}`, pld);
           }
         } else if (type === 'command') {
           // Handle command acknowledgments
@@ -222,24 +139,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             // This is a command acknowledgment
             const status = code === 1000 ? '✅' : '❌';
             const statusText = code === 1000 ? 'Success' : 'Failed';
-            const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT_ACK : SystemEventType.SET_PARAMS_ACK;
-            addSystemMessage(`cmd_ack_${mid}`, `${status} ${cmd}: ${statusText}${msg ? ` (${msg})` : ''}`, systemType);
+
+            // Only log set-params success to console, don't show in chat
+            if (cmd === 'set-params' && code === 1000) {
+              console.log(`✅ set-params: Success${msg ? ` (${msg})` : ''}`, pld);
+            } else {
+              // Show other command responses (errors or interrupt commands)
+              const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT_ACK : SystemEventType.SET_PARAMS_ACK;
+              addSystemMessage(
+                `cmd_ack_${mid}`,
+                `${status} ${cmd}: ${statusText}${msg ? ` (${msg})` : ''}`,
+                systemType,
+              );
+            }
           } else {
-            // This is a command being sent
+            // Command being sent - only log to console for set-params
             const { data } = pld;
-            const dataStr = data ? ` with data: ${JSON.stringify(data)}` : '';
-            const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT : SystemEventType.SET_PARAMS;
-            const messageText = cmd === 'set-params' && data ? `📤 ${cmd}${dataStr} ℹ️` : `📤 ${cmd}${dataStr}`;
-
-            const metadata = cmd === 'set-params' && data ? { fullParams: data } : undefined;
-            console.log('Creating set-params message:', {
-              cmd,
-              data,
-              metadata,
-              messageText,
-            });
-
-            addSystemMessage(`cmd_send_${mid}`, messageText, systemType, metadata);
+            if (cmd === 'set-params') {
+              console.log('📤 set-params command sent:', data);
+            } else {
+              // Show other commands in chat (like interrupt)
+              const dataStr = data ? ` with data: ${JSON.stringify(data)}` : '';
+              const systemType = cmd === 'interrupt' ? SystemEventType.INTERRUPT : SystemEventType.SET_PARAMS;
+              addSystemMessage(`cmd_send_${mid}`, `📤 ${cmd}${dataStr}`, systemType);
+            }
           }
         }
       } catch (error) {
@@ -247,7 +170,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         console.error('Message body:', body);
       }
     },
-    [setIsAvatarSpeaking, addChatMessage, addSystemMessage, addMessage, hasAvatarStartedSpeaking, messages],
+    [setIsAvatarSpeaking, addChatMessage, addSystemMessage],
   );
 
   // Set up stream message listener
@@ -262,13 +185,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       };
     }
   }, [client, connected, handleStreamMessage]);
-
-  // Reset avatar speaking state when connection is established
-  useEffect(() => {
-    if (connected) {
-      setHasAvatarStartedSpeaking(false);
-    }
-  }, [connected]);
 
   // Set up system message callback
   useEffect(() => {
@@ -287,8 +203,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (!connected) {
       clearMessages();
-      // Reset the avatar speaking state when connection is lost
-      setHasAvatarStartedSpeaking(false);
     }
   }, [connected, clearMessages]);
 
@@ -299,11 +213,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const toggleMicInternal = async () => {
     if (toggleMic) {
       await toggleMic();
-      // Add system message for user audio state change
+      // Log user audio state change
       if (micEnabled) {
-        addSystemMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', SystemEventType.MIC_END);
+        console.log('🔇 User microphone disabled');
       } else {
-        addSystemMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', SystemEventType.MIC_START);
+        console.log('🎤 User microphone enabled');
       }
       return;
     }
@@ -311,28 +225,10 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     // Fallback implementation if toggleMic is not provided
     if (!micEnabled) {
       setMicEnabled(true);
-      addSystemMessage(`mic_${Date.now()}`, '🎤 User microphone enabled', SystemEventType.MIC_START);
+      console.log('🎤 User microphone enabled');
     } else {
       setMicEnabled(false);
-      addSystemMessage(`mic_${Date.now()}`, '🔇 User microphone disabled', SystemEventType.MIC_END);
-    }
-  };
-
-  const toggleCameraInternal = async () => {
-    if (!connected) return;
-
-    try {
-      // Add system message for video state change
-      if (cameraEnabled) {
-        addSystemMessage(`camera_${Date.now()}`, '📷 User camera disabled', SystemEventType.CAMERA_END);
-      } else {
-        addSystemMessage(`camera_${Date.now()}`, '📹 User camera enabled', SystemEventType.CAMERA_START);
-      }
-
-      // Toggle the camera
-      await toggleCamera();
-    } catch (error) {
-      console.error('Failed to toggle camera:', error);
+      console.log('🔇 User microphone disabled');
     }
   };
 
@@ -364,8 +260,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               )}
               <div
                 className={`chat-message ${message.sender === MessageSender.USER ? 'sent' : 'received'} ${message.messageType === MessageType.SYSTEM ? `system ${message.systemType || ''}` : ''}`}
-                onMouseEnter={(e) => handleMessageMouseEnter(e, message)}
-                onMouseLeave={handleMessageMouseLeave}
               >
                 {message.text}
               </div>
@@ -374,55 +268,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         })}
         <div ref={messagesEndRef} />
       </div>
-      <Tooltip content={tooltipContent} position={tooltipPosition} visible={showTooltip} />
       <div className="chat-input">
         <button
           onClick={toggleMicInternal}
           disabled={!connected}
           className={`icon-button ${!connected ? 'disabled' : ''}`}
-          title={micEnabled ? 'Disable microphone' : 'Enable microphone'}
+          title={micEnabled ? 'Deshabilitar micrófono' : 'Habilitar micrófono'}
         >
           <span className="material-icons">{micEnabled ? 'mic' : 'mic_off'}</span>
-        </button>
-        {showDebugFeatures && (
-          <button
-            onClick={toggleNoiseReduction}
-            disabled={!connected || !micEnabled}
-            className={`icon-button noise-reduction ${!connected || !micEnabled ? 'disabled' : ''} ${noiseReductionEnabled ? 'active' : ''}`}
-            title={
-              !micEnabled
-                ? 'Enable microphone first to use noise reduction'
-                : noiseReductionEnabled
-                  ? 'Disable noise reduction'
-                  : 'Enable noise reduction'
-            }
-          >
-            <span className="material-icons">{noiseReductionEnabled ? 'noise_control_off' : 'noise_aware'}</span>
-          </button>
-        )}
-        {showDebugFeatures && (
-          <button
-            onClick={dumpAudio}
-            disabled={!connected || !micEnabled || isDumping}
-            className={`icon-button audio-dump ${!connected || !micEnabled || isDumping ? 'disabled' : ''} ${isDumping ? 'dumping' : ''}`}
-            title={isDumping ? 'Dumping audio data...' : 'Dump audio data for analysis (downloads 9 files)'}
-          >
-            <span className="material-icons">{isDumping ? 'download' : 'file_download'}</span>
-          </button>
-        )}
-        <button
-          onClick={toggleCameraInternal}
-          disabled={!connected}
-          className={`icon-button ${!connected ? 'disabled' : ''} ${cameraError ? 'error' : ''}`}
-          title={cameraError || (cameraEnabled ? 'Disable camera' : 'Enable camera')}
-        >
-          <span className="material-icons">{cameraEnabled ? 'videocam' : 'videocam_off'}</span>
         </button>
         {!micEnabled && (
           <>
             <input
               type="text"
-              placeholder={'Type a message...'}
+              placeholder={'Escribe un mensaje...'}
               disabled={!connected}
               className={!connected ? 'disabled' : ''}
               value={inputMessage}
@@ -433,21 +292,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               onClick={sendMessage}
               disabled={!connected}
               className={`icon-button ${!connected ? 'disabled' : ''}`}
-              title="Send message"
+              title="Enviar mensaje"
             >
               <span className="material-icons">send</span>
             </button>
             <button
               onClick={() => {
-                // Add system message for interrupt
-                addSystemMessage(`interrupt_${Date.now()}`, '🛑 User interrupted response', SystemEventType.INTERRUPT);
+                // Log interrupt action
+                console.log('🛑 User interrupted response');
                 interruptResponse(client, (cmd) => {
                   console.log(`Interrupt command sent: ${cmd}`);
                 });
               }}
               disabled={!connected}
               className={`icon-button ${!connected ? 'disabled' : ''}`}
-              title="Interrupt response"
+              title="Interrumpir respuesta"
             >
               <span className="material-icons">stop</span>
             </button>
