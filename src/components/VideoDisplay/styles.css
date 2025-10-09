@@ -145,6 +145,25 @@
   object-fit: contain;
 }
 
+/* Make avatar larger in portrait mode */
+@media (orientation: portrait) and (min-width: 1000px) {
+  #placeholder-video,
+  #remote-video,
+  #placeholder-image {
+    object-fit: cover;
+    transform: scale(1.15);
+  }
+}
+
+@media (orientation: portrait) and (min-width: 1080px) {
+  #placeholder-video,
+  #remote-video,
+  #placeholder-image {
+    object-fit: cover;
+    transform: scale(1.2);
+  }
+}
+
 /* Local video overlay styles */
 .local-video-overlay {
   position: absolute;

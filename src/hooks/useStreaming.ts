@@ -91,7 +91,13 @@ export const useStreaming = (
       log('onUserPublish', user, mediaType);
       if (mediaType === 'video') {
         const remoteTrack = await client.subscribe(user, mediaType);
-        remoteTrack.play('remote-video', { fit: 'contain' });
+
+        // Use 'cover' fit mode for portrait orientation on large screens to make avatar bigger
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const isLargeScreen = window.innerWidth >= 1000;
+        const fitMode = isPortrait && isLargeScreen ? 'cover' : 'contain';
+
+        remoteTrack.play('remote-video', { fit: fitMode });
       } else if (mediaType === 'audio') {
         const remoteTrack = await client.subscribe(user, mediaType);
         remoteTrack.play();
