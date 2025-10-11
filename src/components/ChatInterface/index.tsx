@@ -9,6 +9,7 @@ import {
 } from '../../hooks/useMessageState';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
+import wakuLogo from '../../assets/waku-logo.png';
 
 interface ChatInterfaceProps {
   client: RTCClient;
@@ -38,6 +39,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isResizing, setIsResizing] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startHeight, setStartHeight] = useState(0);
+
+  // Add state for Waku modal
+  const [showWakuModal, setShowWakuModal] = useState(false);
 
   const {
     messages,
@@ -313,6 +317,34 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           </>
         )}
       </div>
+      <div className="chat-footer">
+        <p>
+          Desarrollado por Smartdev y{' '}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              setShowWakuModal(true);
+            }}
+            className="waku-link"
+          >
+            Waku Software
+          </a>
+        </p>
+      </div>
+
+      {/* Waku Modal */}
+      {showWakuModal && (
+        <div className="modal-overlay" onClick={() => setShowWakuModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setShowWakuModal(false)}>
+              ×
+            </button>
+            <img src={wakuLogo} alt="Waku Software" className="modal-logo" />
+            <p className="modal-text">Puedes conocernos visitando www.wakusoftware.com</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

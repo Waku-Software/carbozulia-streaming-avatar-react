@@ -3,6 +3,7 @@ import { ILocalVideoTrack } from 'agora-rtc-sdk-ng';
 import { useAgora } from '../../contexts/AgoraContext';
 import './styles.css';
 import { log } from '../../agoraHelper';
+import smartdevLogo from '../../assets/smartdev-logo.svg';
 
 interface VideoDisplayProps {
   isJoined: boolean;
@@ -278,11 +279,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
           alt="Carbozulia Logo"
           className="brand-logo carbozulia-logo"
         />
-        <img
-          src="https://waku-public-2.s3.us-east-1.amazonaws.com/waku-logo.png"
-          alt="Waku Logo"
-          className="brand-logo waku-logo"
-        />
+        <img src={smartdevLogo} alt="Smartdev Logo" className="brand-logo waku-logo" />
       </div>
 
       {/* Start/Stop Streaming Button Overlay */}
