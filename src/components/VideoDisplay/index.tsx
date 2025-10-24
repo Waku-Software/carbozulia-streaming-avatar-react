@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ILocalVideoTrack } from 'agora-rtc-sdk-ng';
-import { useAgora } from '../../contexts/AgoraContext';
-import './styles.css';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { log } from '../../agoraHelper';
 import smartdevLogo from '../../assets/smartdev-logo.svg';
+import { useAgora } from '../../contexts/AgoraContext';
+import './styles.css';
 
 interface VideoDisplayProps {
   isJoined: boolean;
@@ -286,7 +286,7 @@ const VideoDisplay: React.FC<VideoDisplayProps> = ({
       <div className="streaming-control-overlay">
         {!isJoined ? (
           <button className="start-streaming-button" onClick={handleStartStreaming} disabled={isStarting}>
-            {isStarting ? 'Conectando...' : 'Hablar con Cheito'}
+            {isStarting ? 'Conectando...' : 'Hablar con Minerito'}
           </button>
         ) : (
           <button className="stop-streaming-button" onClick={handleCloseStreaming}>
